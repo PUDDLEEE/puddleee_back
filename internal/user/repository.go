@@ -8,7 +8,9 @@ import (
 	"github.com/PUDDLEEE/puddleee_back/ent"
 )
 
-func Create(ctx context.Context, client *ent.Client) (*ent.User, error) {
+type userRepository struct{}
+
+func (u *userRepository) create(ctx context.Context, client *ent.Client) (*ent.User, error) {
 	user, err := client.User.
 		Create().
 		SetUsername("Something").
@@ -20,4 +22,8 @@ func Create(ctx context.Context, client *ent.Client) (*ent.User, error) {
 	}
 	log.Println("user was created: ", user)
 	return user, nil
+}
+
+func NewUserRepository() userRepository {
+	return userRepository{}
 }

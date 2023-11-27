@@ -1,9 +1,11 @@
 package app
 
 import (
+	"context"
 	"log"
 	"sync"
 
+	"github.com/PUDDLEEE/puddleee_back/internal/user"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,5 +25,6 @@ func (app *Application) initRoutes() {
 
 func (app *Application) setRoutes() {
 	router = gin.Default()
-	router.GET("/", app.Home)
+	userController := user.InitializeController(context.Background(), app.Client)
+	router.GET("/", userController.ViewUser)
 }

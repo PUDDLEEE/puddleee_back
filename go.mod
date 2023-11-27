@@ -5,6 +5,7 @@ go 1.21.0
 require (
 	entgo.io/ent v0.12.5
 	github.com/gin-gonic/gin v1.9.1
+	github.com/google/wire v0.5.0
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.17.0
