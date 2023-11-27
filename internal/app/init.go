@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/PUDDLEEE/puddleee_back/internal/db"
 	"github.com/PUDDLEEE/puddleee_back/pkg/config"
 )
 
@@ -11,6 +12,7 @@ func InitApp() {
 	app := &Application{
 		Config: config.InitConfig(),
 	}
+	app.Client = db.InitDB()
 	app.initRoutes()
 	app.run()
 }
