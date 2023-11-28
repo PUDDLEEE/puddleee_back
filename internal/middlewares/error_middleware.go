@@ -14,7 +14,7 @@ func ErrorHandler() gin.HandlerFunc {
 		for _, e := range c.Errors {
 			err := e.Err
 			if myErr, ok := err.(*errors.CustomError); ok {
-				c.JSON(myErr.Code, myErr)
+				c.JSON(myErr.StatusCode, myErr)
 			} else {
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"code": 500,

@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/PUDDLEEE/puddleee_back/internal/errors"
 	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
@@ -15,21 +16,21 @@ type UserController struct {
 }
 
 func (c *UserController) CreateUser(ctx *gin.Context) {
-	var requestBody dto.CreateUserDTO
-
-	err := ctx.ShouldBind(&requestBody)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := requestBody.Validate(); err != nil {
-		emailError := errors.INVALID_EMAIL
-		emailError.Data = err.Error()
-		ctx.Error(emailError)
-		return
-	}
+	requestBody := ctx.Value("body").(dto.CreateUserDTO)
 	user, err := c.userService.createUser(requestBody)
 	if err != nil {
-		log.Fatal(err)
+		switch {
+		case strings.Contains(err.Error(), "email"):
+			emailInUseError := errors.EMAIL_EXISTED
+			emailInUseError.Data = err.Error()
+			ctx.Error(emailInUseError)
+			return
+		case strings.Contains(err.Error(), "username"):
+			usernameInUseError := errors.USERNAME_EXISTED
+			usernameInUseError.Data = err.Error()
+			ctx.Error(usernameInUseError)
+			return
+		}
 	}
 
 	ctx.JSON(http.StatusCreated, user)

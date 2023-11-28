@@ -35,7 +35,9 @@ func (app *Application) setRoutes() {
 
 func (r *Routes) addUser(rg *gin.RouterGroup, controller user.UserController) {
 	userGroup := rg.Group("/user")
+
 	userGroup.GET("", controller.ViewUser)
 	userGroup.GET("/:id", controller.ViewProfile)
-	userGroup.POST("", controller.CreateUser)
+	userGroup.
+		POST("", middlewares.HashPasswordHandler(), controller.CreateUser)
 }

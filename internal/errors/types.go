@@ -1,15 +1,8 @@
 package errors
 
-import "net/http"
-
 type CustomError struct {
-	Code int
-	Msg  string
-	Data interface{}
+	ErrorCode  string      `json:"error_code"`
+	StatusCode int         `json:"status_code"`
+	Msg        string      `json:"msg"`
+	Data       interface{} `json:"data,omitempty"`
 }
-
-var (
-	INVALID_EMAIL  = NewError(http.StatusBadRequest, "Invalid email.")
-	NOT_FOUND      = NewError(http.StatusNotFound, "Resources not found")
-	INTERNAL_ERROR = NewError(http.StatusInternalServerError, "Internal Server Error")
-)
