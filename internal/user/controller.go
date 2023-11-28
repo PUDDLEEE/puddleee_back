@@ -1,14 +1,12 @@
 package user
 
 import (
-	"log"
-	"net/http"
-	"strconv"
-	"strings"
-
 	"github.com/PUDDLEEE/puddleee_back/internal/errors"
 	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 type UserController struct {
@@ -16,24 +14,27 @@ type UserController struct {
 }
 
 func (c *UserController) CreateUser(ctx *gin.Context) {
-	requestBody := ctx.Value("body").(dto.CreateUserDTO)
-	user, err := c.userService.createUser(requestBody)
-	if err != nil {
-		switch {
-		case strings.Contains(err.Error(), "email"):
-			emailInUseError := errors.EMAIL_EXISTED
-			emailInUseError.Data = err.Error()
-			ctx.Error(emailInUseError)
-			return
-		case strings.Contains(err.Error(), "username"):
-			usernameInUseError := errors.USERNAME_EXISTED
-			usernameInUseError.Data = err.Error()
-			ctx.Error(usernameInUseError)
-			return
+	body := ctx.Value("body")
+	if body != nil {
+		requestBody := ctx.Value("body").(dto.CreateUserDTO)
+		user, err := c.userService.createUser(requestBody)
+		if err != nil {
+			switch {
+			case strings.Contains(err.Error(), "email"):
+				emailInUseError := errors.EMAIL_EXISTED
+				emailInUseError.Data = err.Error()
+				ctx.Error(emailInUseError)
+				return
+			case strings.Contains(err.Error(), "username"):
+				usernameInUseError := errors.USERNAME_EXISTED
+				usernameInUseError.Data = err.Error()
+				ctx.Error(usernameInUseError)
+				return
+			}
 		}
+		ctx.JSON(http.StatusCreated, user)
 	}
 
-	ctx.JSON(http.StatusCreated, user)
 }
 func (c *UserController) ViewUser(ctx *gin.Context) {
 
@@ -42,13 +43,19 @@ func (c *UserController) ViewUser(ctx *gin.Context) {
 func (c *UserController) ViewProfile(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		log.Fatal(err)
+		internalError := errors.INTERNAL_ERROR
+		internalError.Data = err.Error()
+		ctx.Error(internalError)
+		return
 	}
-	user, err := c.userService.viewOneUser(id)
+	existedUser, err := c.userService.findOneUser(id)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, "")
+		notfoundError := errors.NOT_FOUND
+		notfoundError.Data = err.Error()
+		ctx.Error(notfoundError)
+		return
 	}
-	ctx.JSON(http.StatusOK, user)
+	ctx.JSON(http.StatusOK, existedUser)
 }
 
 func NewController(service UserService) UserController {

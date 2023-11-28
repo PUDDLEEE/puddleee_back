@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/PUDDLEEE/puddleee_back/internal/interceptors"
 	"log"
 	"sync"
 
@@ -38,6 +39,11 @@ func (r *Routes) addUser(rg *gin.RouterGroup, controller user.UserController) {
 
 	userGroup.GET("", controller.ViewUser)
 	userGroup.GET("/:id", controller.ViewProfile)
+	createUserInterceptors := []gin.HandlerFunc{
+		interceptors.CreateUserInterceptor(),
+		interceptors.HashPasswordInterceptor(),
+	}
+	createUserInterceptors = append(createUserInterceptors, controller.CreateUser)
 	userGroup.
-		POST("", middlewares.HashPasswordHandler(), controller.CreateUser)
+		POST("", createUserInterceptors...)
 }

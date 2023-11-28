@@ -1,4 +1,4 @@
-package middlewares
+package interceptors
 
 import (
 	"github.com/PUDDLEEE/puddleee_back/internal/errors"
@@ -6,24 +6,24 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func HashPasswordHandler() gin.HandlerFunc {
+func CreateUserInterceptor() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+
 		var requestBody dto.CreateUserDTO
 
 		err := ctx.ShouldBind(&requestBody)
 		if err != nil {
 			internalError := errors.INTERNAL_ERROR
 			internalError.Data = err.Error()
-			ctx.Error(internalError)
+			_ = ctx.Error(internalError)
 			return
 		}
 		if err := requestBody.Validate(); err != nil {
 			emailError := errors.INVALID_EMAIL
 			emailError.Data = err.Error()
-			ctx.Error(emailError)
+			_ = ctx.Error(emailError)
 			return
 		}
-		requestBody.Password = "Custom Password"
 		ctx.Set("body", requestBody)
 		ctx.Next()
 	}
