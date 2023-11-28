@@ -21,7 +21,7 @@ func (app *Application) run() {
 	addr := fmt.Sprintf("%s:%d", app.Config.Server.Host, app.Config.Server.Port)
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: app.Router,
+		Handler: app.Routes.Router,
 	}
 	srv.ListenAndServe()
 }

@@ -6,8 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Application struct {
+type Routes struct {
 	Router *gin.Engine
+}
+
+type Application struct {
+	Routes Routes
 	Config *config.Config
 	Client *ent.Client
 }

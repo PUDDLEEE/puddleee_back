@@ -10,21 +10,29 @@ import (
 )
 
 var once sync.Once
-var router *gin.Engine
+var routes Routes
 
 func (app *Application) initRoutes() {
-	if router == nil {
+	if routes.Router == nil {
 		once.Do(func() {
 			app.setRoutes()
 		})
 	} else {
 		log.Fatal("Router already configure")
 	}
-	app.Router = router
+	app.Routes = routes
 }
 
 func (app *Application) setRoutes() {
-	router = gin.Default()
+	routes.Router = gin.Default()
+	v1 := routes.Router.Group("/api/v1")
+
 	userController := user.InitializeController(context.Background(), app.Client)
-	router.GET("/", userController.ViewUser)
+	routes.addUser(v1, userController)
+}
+
+func (r *Routes) addUser(rg *gin.RouterGroup, controller user.UserController) {
+	userGroup := rg.Group("/user")
+	userGroup.GET("", controller.ViewUser)
+	userGroup.GET("/:id", controller.ViewProfile)
 }
