@@ -13,7 +13,15 @@ type UserService struct {
 }
 
 func (s *UserService) createUser() (*ent.User, error) {
-	user, err := s.userRepository.create(s.ctx, s.client)
+	user, err := s.userRepository.Create(s.ctx, s.client)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *UserService) viewOneUser(id int) (*ent.User, error) {
+	user, err := s.userRepository.FindOneById(s.ctx, s.client, 1)
 	if err != nil {
 		return nil, err
 	}
