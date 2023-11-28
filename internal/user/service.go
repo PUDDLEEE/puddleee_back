@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/PUDDLEEE/puddleee_back/ent"
+	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 )
 
 type UserService struct {
@@ -12,8 +13,8 @@ type UserService struct {
 	client         *ent.Client
 }
 
-func (s *UserService) createUser() (*ent.User, error) {
-	user, err := s.userRepository.Create(s.ctx, s.client)
+func (s *UserService) createUser(dto dto.CreateUserDTO) (*ent.User, error) {
+	user, err := s.userRepository.create(s.ctx, s.client, dto)
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +22,7 @@ func (s *UserService) createUser() (*ent.User, error) {
 }
 
 func (s *UserService) viewOneUser(id int) (*ent.User, error) {
-	user, err := s.userRepository.FindOneById(s.ctx, s.client, 1)
+	user, err := s.userRepository.findOneById(s.ctx, s.client, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -29,5 +30,5 @@ func (s *UserService) viewOneUser(id int) (*ent.User, error) {
 }
 
 func NewService(repo userRepository, ctx context.Context, client *ent.Client) UserService {
-	return UserService{userRepository: repo}
+	return UserService{userRepository: repo, ctx: ctx, client: client}
 }
