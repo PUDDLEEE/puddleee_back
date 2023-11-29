@@ -33,6 +33,10 @@ func (u *UserRepository) findOneById(ctx context.Context, client *ent.Client, id
 	return existedUser, nil
 }
 
+func (u *UserRepository) update(ctx context.Context, client *ent.Client) (*ent.User, error) {
+	return nil, nil
+}
+
 func NewUserRepository() UserRepository {
 	return UserRepository{}
 }
