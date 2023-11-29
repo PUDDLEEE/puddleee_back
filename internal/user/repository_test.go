@@ -16,9 +16,9 @@ func TestCreate(t *testing.T) {
 		expect func(*testing.T, *UserRepository, *ent.Client, context.Context)
 	}{
 		{
-			name: "create/username_already_exists",
+			name: "Create/username_already_exists",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
 					Username: "test",
 					Email:    "123",
 					Password: "123",
@@ -26,7 +26,7 @@ func TestCreate(t *testing.T) {
 				require.NoError(t, err)
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
 					Username: "test",
 					Email:    "1",
 					Password: "1",
@@ -36,9 +36,9 @@ func TestCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "create/email_already_exists",
+			name: "Create/email_already_exists",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
 					Username: "test",
 					Email:    "test",
 					Password: "123",
@@ -46,7 +46,7 @@ func TestCreate(t *testing.T) {
 				require.NoError(t, err)
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
 					Username: "1",
 					Email:    "test",
 					Password: "1",
@@ -56,12 +56,12 @@ func TestCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "create/username_should_not_empty",
+			name: "Create/username_should_not_empty",
 			before: func(t *testing.T, repository *UserRepository, client *ent.Client, ctx context.Context) {
 
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
 					Username: "",
 					Email:    "123",
 					Password: "123",
@@ -72,12 +72,12 @@ func TestCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "create/email_should_not_empty",
+			name: "Create/email_should_not_empty",
 			before: func(t *testing.T, repository *UserRepository, client *ent.Client, ctx context.Context) {
 
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
 					Username: "123",
 					Email:    "",
 					Password: "123",
@@ -88,12 +88,12 @@ func TestCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "create/password_should_not_empty",
+			name: "Create/password_should_not_empty",
 			before: func(t *testing.T, repository *UserRepository, client *ent.Client, ctx context.Context) {
 
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
 					Username: "123",
 					Email:    "123",
 					Password: "",
@@ -126,12 +126,12 @@ func TestFindOneById(t *testing.T) {
 		expect func(*testing.T, *UserRepository, *ent.Client, context.Context)
 	}{
 		{
-			name: "findOneById/could_not_found",
+			name: "FindOneById/could_not_found",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
 
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.findOneById(ctx, client, 1)
+				_, err := repo.FindOneById(ctx, client, 1)
 
 				require.Error(t, err)
 			},
@@ -159,20 +159,20 @@ func TestUpdate(t *testing.T) {
 		expect func(*testing.T, *UserRepository, *ent.Client, context.Context)
 	}{
 		{
-			name: "update/chould_not_update",
+			name: "Update/chould_not_update",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
 
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.update(ctx, client, 1, dto.UpdateUserDTO{})
+				_, err := repo.Update(ctx, client, 1, dto.UpdateUserDTO{})
 
 				require.Error(t, err)
 			},
 		},
 		{
-			name: "update/could_not_empty_dto",
+			name: "Update/could_not_empty_dto",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
 					Username: "test",
 					Email:    "test",
 					Password: "123",
@@ -180,15 +180,15 @@ func TestUpdate(t *testing.T) {
 				require.NoError(t, err)
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.update(ctx, client, 1, dto.UpdateUserDTO{})
+				_, err := repo.Update(ctx, client, 1, dto.UpdateUserDTO{})
 
 				require.Error(t, err)
 			},
 		},
 		{
-			name: "update/should_update_username_properly",
+			name: "Update/should_update_username_properly",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
 					Username: "test",
 					Email:    "test",
 					Password: "test",
@@ -197,7 +197,7 @@ func TestUpdate(t *testing.T) {
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
 				username := "hello"
-				usernameUpdated, err := repo.update(ctx, client, 1, dto.UpdateUserDTO{
+				usernameUpdated, err := repo.Update(ctx, client, 1, dto.UpdateUserDTO{
 					Username: &username,
 				})
 				require.NoError(t, err)
@@ -207,9 +207,9 @@ func TestUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "update/should_update_email_properly",
+			name: "Update/should_update_email_properly",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
 					Username: "test",
 					Email:    "test",
 					Password: "test",
@@ -218,7 +218,7 @@ func TestUpdate(t *testing.T) {
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
 				email := "123"
-				usernameUpdated, err := repo.update(ctx, client, 1, dto.UpdateUserDTO{
+				usernameUpdated, err := repo.Update(ctx, client, 1, dto.UpdateUserDTO{
 					Email: &email,
 				})
 				require.NoError(t, err)
@@ -228,9 +228,9 @@ func TestUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "update/should_update_password_properly",
+			name: "Update/should_update_password_properly",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
 					Username: "test",
 					Email:    "test",
 					Password: "test",
@@ -239,7 +239,7 @@ func TestUpdate(t *testing.T) {
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
 				password := "123"
-				usernameUpdated, err := repo.update(ctx, client, 1, dto.UpdateUserDTO{
+				usernameUpdated, err := repo.Update(ctx, client, 1, dto.UpdateUserDTO{
 					Password: &password,
 				})
 				require.NoError(t, err)
@@ -271,20 +271,20 @@ func TestDelete(t *testing.T) {
 		expect func(*testing.T, *UserRepository, *ent.Client, context.Context)
 	}{
 		{
-			name: "delete/could_not_delete",
+			name: "Delete/could_not_delete",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
 
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				err := repo.delete(ctx, client, 1)
+				err := repo.Delete(ctx, client, 1)
 
 				require.Error(t, err)
 			},
 		},
 		{
-			name: "delete/could_delete",
+			name: "Delete/could_delete",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
 					Username: "test",
 					Email:    "test",
 					Password: "test",
@@ -292,11 +292,11 @@ func TestDelete(t *testing.T) {
 				require.NoError(t, err)
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				err := repo.delete(ctx, client, 1)
+				err := repo.Delete(ctx, client, 1)
 
 				require.NoError(t, err)
 
-				_, err = repo.findOneById(ctx, client, 1)
+				_, err = repo.FindOneById(ctx, client, 1)
 				require.Error(t, err)
 			},
 		},

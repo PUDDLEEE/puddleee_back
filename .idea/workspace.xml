@@ -45,7 +45,6 @@
     "RunOnceActivity.go.modules.automatic.dependencies.download": "true",
     "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
     "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "chore/2/projectMinorSetting",
     "go.import.settings.migrated": "true",
     "go.sdk.automatically.set": "true",
     "last_opened_file_path": "/Users/sungjinlee/project/puddleee_back",
@@ -53,6 +52,11 @@
     "node.js.selected.package.eslint": "(autodetect)"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/test/user" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="puddleee_back" />
@@ -72,6 +76,14 @@
       <framework value="gotest" />
       <method v="2" />
     </configuration>
+    <configuration name="cover.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/puddleee_back/test/user/cover.html" useBuiltInWebServerPort="true">
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JavaScript 디버그.cover.html" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="애플리케이션 수준" UseSingleDictionary="true" transferred="true" />
   <component name="TypeScriptGeneratedFilesManager">
@@ -79,5 +91,16 @@
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/internal/user/service_test.go</url>
+          <line>2</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

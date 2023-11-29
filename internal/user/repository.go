@@ -10,7 +10,7 @@ import (
 
 type UserRepository struct{}
 
-func (u *UserRepository) create(ctx context.Context, client *ent.Client, dto dto.CreateUserDTO) (*ent.User, error) {
+func (u *UserRepository) Create(ctx context.Context, client *ent.Client, dto dto.CreateUserDTO) (*ent.User, error) {
 	newUser, err := client.User.Create().
 		SetUsername(dto.Username).
 		SetEmail(dto.Email).
@@ -22,7 +22,7 @@ func (u *UserRepository) create(ctx context.Context, client *ent.Client, dto dto
 	return newUser, nil
 }
 
-func (u *UserRepository) findOneById(ctx context.Context, client *ent.Client, id int) (*ent.User, error) {
+func (u *UserRepository) FindOneById(ctx context.Context, client *ent.Client, id int) (*ent.User, error) {
 	existedUser, err := client.User.Query().
 		Where(user.ID(id)).
 		Select(user.FieldID, user.FieldEmail, user.FieldUsername).
@@ -33,7 +33,7 @@ func (u *UserRepository) findOneById(ctx context.Context, client *ent.Client, id
 	return existedUser, nil
 }
 
-func (u *UserRepository) update(ctx context.Context, client *ent.Client, id int, dto dto.UpdateUserDTO) (*ent.User, error) {
+func (u *UserRepository) Update(ctx context.Context, client *ent.Client, id int, dto dto.UpdateUserDTO) (*ent.User, error) {
 	if dto.Username == nil && dto.Email == nil && dto.Password == nil {
 		err := errors.New("at least one field should contain data")
 		return nil, err
@@ -50,7 +50,7 @@ func (u *UserRepository) update(ctx context.Context, client *ent.Client, id int,
 	return updatedUser, nil
 }
 
-func (u *UserRepository) delete(ctx context.Context, client *ent.Client, id int) error {
+func (u *UserRepository) Delete(ctx context.Context, client *ent.Client, id int) error {
 	err := client.User.
 		DeleteOneID(id).
 		Exec(ctx)
