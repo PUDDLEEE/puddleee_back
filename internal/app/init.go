@@ -13,6 +13,7 @@ func InitApp() {
 		Config: config.InitConfig(),
 	}
 	app.Client = db.InitDB()
+	defer app.Client.Close()
 	app.initRoutes()
 	app.run()
 }
