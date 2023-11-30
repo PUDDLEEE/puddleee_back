@@ -29,7 +29,7 @@ func TestUserService_createUser(t *testing.T) {
 					Once()
 			},
 			expect: func(t *testing.T, service *UserService, client *ent.Client, ctx context.Context) {
-				user, err := service.createUser(dto.CreateUserDTO{})
+				user, err := service.CreateUser(dto.CreateUserDTO{})
 
 				require.Error(t, err)
 				require.Nil(t, user)
@@ -70,7 +70,7 @@ func TestUserService_findOneUser(t *testing.T) {
 					Once()
 			},
 			expect: func(t *testing.T, service *UserService, client *ent.Client, ctx context.Context) {
-				user, err := service.findOneUser(1)
+				user, err := service.FindOneUser(1)
 
 				require.Error(t, err)
 				require.Nil(t, user)

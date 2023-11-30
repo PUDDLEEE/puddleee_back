@@ -1,12 +1,13 @@
 package user
 
 import (
-	"github.com/PUDDLEEE/puddleee_back/internal/errors"
-	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/PUDDLEEE/puddleee_back/internal/errors"
+	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
+	"github.com/gin-gonic/gin"
 )
 
 type UserController struct {
@@ -17,7 +18,7 @@ func (c *UserController) CreateUser(ctx *gin.Context) {
 	body := ctx.Value("body")
 	if body != nil {
 		requestBody := ctx.Value("body").(dto.CreateUserDTO)
-		user, err := c.userService.createUser(requestBody)
+		user, err := c.userService.CreateUser(requestBody)
 		if err != nil {
 			switch {
 			case strings.Contains(err.Error(), "email"):
@@ -48,7 +49,7 @@ func (c *UserController) ViewProfile(ctx *gin.Context) {
 		ctx.Error(internalError)
 		return
 	}
-	existedUser, err := c.userService.findOneUser(id)
+	existedUser, err := c.userService.FindOneUser(id)
 	if err != nil {
 		notfoundError := errors.NOT_FOUND
 		notfoundError.Data = err.Error()
