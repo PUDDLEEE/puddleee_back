@@ -2,12 +2,15 @@ package user
 
 import (
 	"context"
+
 	"github.com/PUDDLEEE/puddleee_back/ent"
 	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
+	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces"
+	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces/mocks"
 )
 
 type UserService struct {
-	userRepository UserRepository
+	userRepository interfaces.IUserRepository
 	ctx            context.Context
 	client         *ent.Client
 }
@@ -28,6 +31,13 @@ func (s *UserService) findOneUser(id int) (*ent.User, error) {
 	return user, nil
 }
 
-func NewService(repo UserRepository, ctx context.Context, client *ent.Client) UserService {
-	return UserService{userRepository: repo, ctx: ctx, client: client}
+func NewService(repo interfaces.IUserRepository, ctx context.Context, client *ent.Client) UserService {
+	if userRepository, ok := repo.(*UserRepository); ok {
+		return UserService{userRepository: userRepository, ctx: ctx, client: client}
+	}
+
+	if userRepository, ok := repo.(*mocks.IUserRepository); ok {
+		return UserService{userRepository: userRepository, ctx: ctx, client: client}
+	}
+	return UserService{}
 }

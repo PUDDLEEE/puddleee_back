@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+
 	"github.com/PUDDLEEE/puddleee_back/ent"
 	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 )
@@ -14,3 +15,4 @@ type IUserRepository interface {
 }
 
 //mockgen -source=pkg/interfaces/IUserRepository.go -destination=pkg/interfaces/mocks/IUserRepository.go -package=mocks
+//mockery --dir=pkg/interfaces --name=IUserRepository --filename=IUserRepository.go --output=pkg/interfaces/mocks --outpkg=mocks

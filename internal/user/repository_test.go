@@ -2,14 +2,15 @@ package user
 
 import (
 	"context"
+	"testing"
+
 	"github.com/PUDDLEEE/puddleee_back/ent"
 	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
-func TestCreate(t *testing.T) {
+func TestUserRepository_Create(t *testing.T) {
 	tests := []struct {
 		name   string
 		before func(*testing.T, *UserRepository, *ent.Client, context.Context)
@@ -119,7 +120,7 @@ func TestCreate(t *testing.T) {
 	}
 }
 
-func TestFindOneById(t *testing.T) {
+func TestUserRepository_FindOneById(t *testing.T) {
 	tests := []struct {
 		name   string
 		before func(*testing.T, *UserRepository, *ent.Client, context.Context)
@@ -152,7 +153,7 @@ func TestFindOneById(t *testing.T) {
 	}
 }
 
-func TestUpdate(t *testing.T) {
+func TestUserRepository_Update(t *testing.T) {
 	tests := []struct {
 		name   string
 		before func(*testing.T, *UserRepository, *ent.Client, context.Context)
@@ -264,7 +265,7 @@ func TestUpdate(t *testing.T) {
 	}
 }
 
-func TestDelete(t *testing.T) {
+func TestUserRepository_Delete(t *testing.T) {
 	tests := []struct {
 		name   string
 		before func(*testing.T, *UserRepository, *ent.Client, context.Context)

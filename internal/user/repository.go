@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+
 	"github.com/PUDDLEEE/puddleee_back/ent"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
 	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
@@ -60,6 +61,6 @@ func (u *UserRepository) Delete(ctx context.Context, client *ent.Client, id int)
 	return nil
 }
 
-func NewUserRepository() UserRepository {
-	return UserRepository{}
+func NewUserRepository() *UserRepository {
+	return &UserRepository{}
 }
