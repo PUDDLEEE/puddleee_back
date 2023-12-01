@@ -43,10 +43,7 @@ func (r *Routes) addSwagger(rg *gin.RouterGroup) {
 }
 
 func (r *Routes) addUser(rg *gin.RouterGroup, controller user.UserController) {
-	userGroup := rg.Group("/user")
 
-	userGroup.GET("", controller.ViewUser)
-	userGroup.GET("/:id", controller.ViewProfile)
 	createUserInterceptors := []gin.HandlerFunc{
 		interceptors.CreateUserInterceptor(),
 		interceptors.HashPasswordInterceptor(),
@@ -60,8 +57,15 @@ func (r *Routes) addUser(rg *gin.RouterGroup, controller user.UserController) {
 
 	updateUserInterceptors = append(updateUserInterceptors, controller.UpdateProfile)
 
+	userGroup := rg.Group("/user")
+
+	userGroup.GET("", controller.ViewUser)
+	userGroup.GET("/:id", controller.ViewProfile)
+
 	userGroup.
 		POST("", createUserInterceptors...)
 
 	userGroup.PATCH("/:id", updateUserInterceptors...)
+
+	userGroup.DELETE("/:id", controller.DeleteProfile)
 }

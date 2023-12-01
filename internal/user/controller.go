@@ -121,6 +121,26 @@ func (c *UserController) UpdateProfile(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, user)
 	}
 }
+
+func (c *UserController) DeleteProfile(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		paramError := errors.BAD_PARAM
+		paramError.Data = err.Error()
+		ctx.Error(paramError)
+		return
+	}
+
+	err = c.userService.DeleteUser(id)
+	if err != nil {
+		internalError := errors.INTERNAL_ERROR
+		internalError.Data = err.Error()
+		ctx.Error(internalError)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"ok": true})
+}
 func NewController(service interfaces.IUserService) *UserController {
 	if userService, ok := service.(*UserService); ok {
 		return &UserController{userService: userService}
