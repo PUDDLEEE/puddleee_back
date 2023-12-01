@@ -55,13 +55,13 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/PUDDLEEE/puddleee_back/internal/user/controller.go (0.0%)</option>
+				<option value="file0">github.com/PUDDLEEE/puddleee_back/internal/user/controller.go (87.9%)</option>
 				
-				<option value="file1">github.com/PUDDLEEE/puddleee_back/internal/user/repository.go (85.0%)</option>
+				<option value="file1">github.com/PUDDLEEE/puddleee_back/internal/user/initController.go (0.0%)</option>
 				
-				<option value="file2">github.com/PUDDLEEE/puddleee_back/internal/user/service.go (0.0%)</option>
+				<option value="file2">github.com/PUDDLEEE/puddleee_back/internal/user/repository.go (85.0%)</option>
 				
-				<option value="file3">github.com/PUDDLEEE/puddleee_back/internal/user/wire_gen.go (0.0%)</option>
+				<option value="file3">github.com/PUDDLEEE/puddleee_back/internal/user/service.go (69.2%)</option>
 				
 				</select>
 			</div>
@@ -78,31 +78,34 @@
 		<pre class="file" id="file0" style="display: none">package user
 
 import (
-        "github.com/PUDDLEEE/puddleee_back/internal/errors"
-        "github.com/PUDDLEEE/puddleee_back/internal/user/dto"
-        "github.com/gin-gonic/gin"
+        "github.com/PUDDLEEE/puddleee_back/pkg/interfaces"
+        "github.com/PUDDLEEE/puddleee_back/pkg/interfaces/mocks"
         "net/http"
         "strconv"
         "strings"
+
+        "github.com/PUDDLEEE/puddleee_back/internal/errors"
+        "github.com/PUDDLEEE/puddleee_back/internal/user/dto"
+        "github.com/gin-gonic/gin"
 )
 
 type UserController struct {
-        userService UserService
+        userService interfaces.IUserService
 }
 
-func (c *UserController) CreateUser(ctx *gin.Context) <span class="cov0" title="0">{
+func (c *UserController) CreateUser(ctx *gin.Context) <span class="cov8" title="1">{
         body := ctx.Value("body")
-        if body != nil </span><span class="cov0" title="0">{
-                requestBody := ctx.Value("body").(dto.CreateUserDTO)
-                user, err := c.userService.createUser(requestBody)
-                if err != nil </span><span class="cov0" title="0">{
+        if body != nil </span><span class="cov8" title="1">{
+                requestBody := body.(dto.CreateUserDTO)
+                user, err := c.userService.CreateUser(requestBody)
+                if err != nil </span><span class="cov8" title="1">{
                         switch </span>{
-                        case strings.Contains(err.Error(), "email"):<span class="cov0" title="0">
+                        case strings.Contains(err.Error(), "email"):<span class="cov8" title="1">
                                 emailInUseError := errors.EMAIL_EXISTED
                                 emailInUseError.Data = err.Error()
                                 ctx.Error(emailInUseError)
                                 return</span>
-                        case strings.Contains(err.Error(), "username"):<span class="cov0" title="0">
+                        case strings.Contains(err.Error(), "username"):<span class="cov8" title="1">
                                 usernameInUseError := errors.USERNAME_EXISTED
                                 usernameInUseError.Data = err.Error()
                                 ctx.Error(usernameInUseError)
@@ -117,16 +120,16 @@ func (c *UserController) ViewUser(ctx *gin.Context) {<span class="cov0" title="0
 
 }</span>
 
-func (c *UserController) ViewProfile(ctx *gin.Context) <span class="cov0" title="0">{
+func (c *UserController) ViewProfile(ctx *gin.Context) <span class="cov8" title="1">{
         id, err := strconv.Atoi(ctx.Param("id"))
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 internalError := errors.INTERNAL_ERROR
                 internalError.Data = err.Error()
                 ctx.Error(internalError)
                 return
         }</span>
-        <span class="cov0" title="0">existedUser, err := c.userService.findOneUser(id)
-        if err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">existedUser, err := c.userService.FindOneUser(id)
+        if err != nil </span><span class="cov8" title="1">{
                 notfoundError := errors.NOT_FOUND
                 notfoundError.Data = err.Error()
                 ctx.Error(notfoundError)
@@ -135,16 +138,39 @@ func (c *UserController) ViewProfile(ctx *gin.Context) <span class="cov0" title=
         <span class="cov0" title="0">ctx.JSON(http.StatusOK, existedUser)</span>
 }
 
-func NewController(service UserService) UserController <span class="cov0" title="0">{
-        return UserController{userService: service}
-}</span>
+func NewController(service interfaces.IUserService) *UserController <span class="cov8" title="1">{
+        if userService, ok := service.(*UserService); ok </span><span class="cov0" title="0">{
+                return &amp;UserController{userService: userService}
+        }</span>
+        <span class="cov8" title="1">if mockUserService, ok := service.(*mocks.IUserService); ok </span><span class="cov8" title="1">{
+                return &amp;UserController{userService: mockUserService}
+        }</span>
+        <span class="cov0" title="0">return &amp;UserController{}</span>
+}
 </pre>
 		
 		<pre class="file" id="file1" style="display: none">package user
 
 import (
         "context"
+
+        "github.com/PUDDLEEE/puddleee_back/ent"
+)
+
+func InitializeController(ctx context.Context, client *ent.Client) UserController <span class="cov0" title="0">{
+        userRepository := NewUserRepository()
+        userService := NewService(userRepository, ctx, client)
+        userController := NewController(userService)
+        return *userController
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package user
+
+import (
+        "context"
         "errors"
+
         "github.com/PUDDLEEE/puddleee_back/ent"
         "github.com/PUDDLEEE/puddleee_back/ent/user"
         "github.com/PUDDLEEE/puddleee_back/internal/user/dto"
@@ -152,7 +178,7 @@ import (
 
 type UserRepository struct{}
 
-func (u *UserRepository) create(ctx context.Context, client *ent.Client, dto dto.CreateUserDTO) (*ent.User, error) <span class="cov8" title="1">{
+func (u *UserRepository) Create(ctx context.Context, client *ent.Client, dto dto.CreateUserDTO) (*ent.User, error) <span class="cov8" title="1">{
         newUser, err := client.User.Create().
                 SetUsername(dto.Username).
                 SetEmail(dto.Email).
@@ -164,7 +190,7 @@ func (u *UserRepository) create(ctx context.Context, client *ent.Client, dto dto
         <span class="cov8" title="1">return newUser, nil</span>
 }
 
-func (u *UserRepository) findOneById(ctx context.Context, client *ent.Client, id int) (*ent.User, error) <span class="cov8" title="1">{
+func (u *UserRepository) FindOneById(ctx context.Context, client *ent.Client, id int) (*ent.User, error) <span class="cov8" title="1">{
         existedUser, err := client.User.Query().
                 Where(user.ID(id)).
                 Select(user.FieldID, user.FieldEmail, user.FieldUsername).
@@ -175,7 +201,7 @@ func (u *UserRepository) findOneById(ctx context.Context, client *ent.Client, id
         <span class="cov0" title="0">return existedUser, nil</span>
 }
 
-func (u *UserRepository) update(ctx context.Context, client *ent.Client, id int, dto dto.UpdateUserDTO) (*ent.User, error) <span class="cov8" title="1">{
+func (u *UserRepository) Update(ctx context.Context, client *ent.Client, id int, dto dto.UpdateUserDTO) (*ent.User, error) <span class="cov8" title="1">{
         if dto.Username == nil &amp;&amp; dto.Email == nil &amp;&amp; dto.Password == nil </span><span class="cov8" title="1">{
                 err := errors.New("at least one field should contain data")
                 return nil, err
@@ -192,7 +218,7 @@ func (u *UserRepository) update(ctx context.Context, client *ent.Client, id int,
         <span class="cov8" title="1">return updatedUser, nil</span>
 }
 
-func (u *UserRepository) delete(ctx context.Context, client *ent.Client, id int) error <span class="cov8" title="1">{
+func (u *UserRepository) Delete(ctx context.Context, client *ent.Client, id int) error <span class="cov8" title="1">{
         err := client.User.
                 DeleteOneID(id).
                 Exec(ctx)
@@ -202,68 +228,54 @@ func (u *UserRepository) delete(ctx context.Context, client *ent.Client, id int)
         <span class="cov8" title="1">return nil</span>
 }
 
-func NewUserRepository() UserRepository <span class="cov0" title="0">{
-        return UserRepository{}
+func NewUserRepository() *UserRepository <span class="cov0" title="0">{
+        return &amp;UserRepository{}
 }</span>
 </pre>
 		
-		<pre class="file" id="file2" style="display: none">package user
+		<pre class="file" id="file3" style="display: none">package user
 
 import (
         "context"
 
         "github.com/PUDDLEEE/puddleee_back/ent"
         "github.com/PUDDLEEE/puddleee_back/internal/user/dto"
+        "github.com/PUDDLEEE/puddleee_back/pkg/interfaces"
+        "github.com/PUDDLEEE/puddleee_back/pkg/interfaces/mocks"
 )
 
 type UserService struct {
-        userRepository UserRepository
+        userRepository interfaces.IUserRepository
         ctx            context.Context
         client         *ent.Client
 }
 
-func (s *UserService) createUser(dto dto.CreateUserDTO) (*ent.User, error) <span class="cov0" title="0">{
-        user, err := s.userRepository.create(s.ctx, s.client, dto)
-        if err != nil </span><span class="cov0" title="0">{
+func (s *UserService) CreateUser(dto dto.CreateUserDTO) (*ent.User, error) <span class="cov8" title="1">{
+        user, err := s.userRepository.Create(s.ctx, s.client, dto)
+        if err != nil </span><span class="cov8" title="1">{
                 return nil, err
         }</span>
         <span class="cov0" title="0">return user, nil</span>
 }
 
-func (s *UserService) findOneUser(id int) (*ent.User, error) <span class="cov0" title="0">{
-        user, err := s.userRepository.findOneById(s.ctx, s.client, id)
-        if err != nil </span><span class="cov0" title="0">{
+func (s *UserService) FindOneUser(id int) (*ent.User, error) <span class="cov8" title="1">{
+        user, err := s.userRepository.FindOneById(s.ctx, s.client, id)
+        if err != nil </span><span class="cov8" title="1">{
                 return nil, err
         }</span>
         <span class="cov0" title="0">return user, nil</span>
 }
 
-func NewService(repo UserRepository, ctx context.Context, client *ent.Client) UserService <span class="cov0" title="0">{
-        return UserService{userRepository: repo, ctx: ctx, client: client}
-}</span>
-</pre>
-		
-		<pre class="file" id="file3" style="display: none">// Code generated by Wire. DO NOT EDIT.
+func NewService(repo interfaces.IUserRepository, ctx context.Context, client *ent.Client) *UserService <span class="cov8" title="1">{
+        if userRepository, ok := repo.(*UserRepository); ok </span><span class="cov0" title="0">{
+                return &amp;UserService{userRepository: userRepository, ctx: ctx, client: client}
+        }</span>
 
-//go:generate go run github.com/google/wire/cmd/wire
-//go:build !wireinject
-// +build !wireinject
-
-package user
-
-import (
-        "context"
-        "github.com/PUDDLEEE/puddleee_back/ent"
-)
-
-// Injectors from wire.go:
-
-func InitializeController(ctx context.Context, client *ent.Client) UserController <span class="cov0" title="0">{
-        userUserRepository := NewUserRepository()
-        userService := NewService(userUserRepository, ctx, client)
-        userController := NewController(userService)
-        return userController
-}</span>
+        <span class="cov8" title="1">if userRepository, ok := repo.(*mocks.IUserRepository); ok </span><span class="cov8" title="1">{
+                return &amp;UserService{userRepository: userRepository, ctx: ctx, client: client}
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
 </pre>
 		
 		</div>
