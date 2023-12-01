@@ -87,6 +87,40 @@ func (c *UserController) ViewProfile(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, existedUser)
 }
 
+// UpdateProfile godoc
+//
+//	@Summary		Update specific user profile
+//	@Description	Update one user's profile
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"User ID"
+//	@Param			UpdateUserDTO	body		dto.UpdateUserDTO	true	"Update User Info"
+//	@Success		200	{object}	ent.User
+//	@Failure		400	{object}	errors.CustomError
+//	@Failure		500	{object}	errors.CustomError
+//	@Router			/user/{id} [patch]
+func (c *UserController) UpdateProfile(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		paramError := errors.BAD_PARAM
+		paramError.Data = err.Error()
+		ctx.Error(paramError)
+		return
+	}
+	body := ctx.Value("body")
+	if body != nil {
+		requestBody := body.(dto.UpdateUserDTO)
+		user, err := c.userService.UpdateUser(id, requestBody)
+		if err != nil {
+			internalError := errors.INTERNAL_ERROR
+			internalError.Data = err.Error()
+			ctx.Error(internalError)
+			return
+		}
+		ctx.JSON(http.StatusOK, user)
+	}
+}
 func NewController(service interfaces.IUserService) *UserController {
 	if userService, ok := service.(*UserService); ok {
 		return &UserController{userService: userService}

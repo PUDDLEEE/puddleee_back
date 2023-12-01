@@ -52,6 +52,16 @@ func (r *Routes) addUser(rg *gin.RouterGroup, controller user.UserController) {
 		interceptors.HashPasswordInterceptor(),
 	}
 	createUserInterceptors = append(createUserInterceptors, controller.CreateUser)
+
+	updateUserInterceptors := []gin.HandlerFunc{
+		interceptors.UpdateUserInterceptor(),
+		interceptors.HashPasswordInterceptor(),
+	}
+
+	updateUserInterceptors = append(updateUserInterceptors, controller.UpdateProfile)
+
 	userGroup.
 		POST("", createUserInterceptors...)
+
+	userGroup.PATCH("/:id", updateUserInterceptors...)
 }

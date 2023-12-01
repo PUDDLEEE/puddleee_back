@@ -9,6 +9,15 @@ definitions:
       username:
         type: string
     type: object
+  dto.UpdateUserDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
   ent.User:
     properties:
       email:
@@ -109,6 +118,40 @@ paths:
           schema:
             $ref: '#/definitions/errors.CustomError'
       summary: View specific user profile
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Update one user's profile
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update User Info
+        in: body
+        name: UpdateUserDTO
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+      summary: Update specific user profile
       tags:
       - users
 securityDefinitions:

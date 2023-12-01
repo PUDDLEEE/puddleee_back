@@ -40,6 +40,10 @@ func (s *UserService) UpdateUser(id int, dto dto.UpdateUserDTO) (*ent.User, erro
 }
 
 func (s *UserService) DeleteUser(id int) error {
+	err := s.userRepository.Delete(s.ctx, s.client, id)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

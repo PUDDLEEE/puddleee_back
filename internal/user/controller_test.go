@@ -146,3 +146,69 @@ func TestUserController_ViewProfile(t *testing.T) {
 		})
 	}
 }
+
+func TestUserController_UpdateProfile(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	tests := []struct {
+		name   string
+		before func(*testing.T, *mocks.IUserService, *gin.Engine)
+		expect func(*testing.T, UserController, *gin.Engine, *httptest.ResponseRecorder, *mocks.IUserService)
+	}{
+		{
+			name: "UpdateProfile/invalid_url_param",
+			before: func(t *testing.T, service *mocks.IUserService, router *gin.Engine) {
+
+				router.Use(middlewares.ErrorHandler())
+
+			},
+			expect: func(t *testing.T, controller UserController, router *gin.Engine, w *httptest.ResponseRecorder, service *mocks.IUserService) {
+				router.PATCH("/api/v1/user/:id", controller.UpdateProfile)
+				req, _ := http.NewRequest(http.MethodPatch, "/api/v1/user/abc", nil)
+				router.ServeHTTP(w, req)
+				require.Equal(t, w.Code, http.StatusBadRequest)
+				require.NotEmpty(t, w.Body)
+				service.AssertExpectations(t)
+			},
+		},
+		{
+			name: "UpdateProfile/update_error",
+			before: func(t *testing.T, service *mocks.IUserService, router *gin.Engine) {
+				service.On("UpdateUser", 1, dto.UpdateUserDTO{}).
+					Return(nil, errors.New("")).
+					Once()
+				router.Use(func(ctx *gin.Context) {
+					ctx.Set("body", dto.UpdateUserDTO{})
+				})
+				router.Use(middlewares.ErrorHandler())
+			},
+			expect: func(t *testing.T, controller UserController, router *gin.Engine, w *httptest.ResponseRecorder, service *mocks.IUserService) {
+				router.PATCH("/api/v1/user/:id", controller.UpdateProfile)
+				req, _ := http.NewRequest(http.MethodPatch, "/api/v1/user/1", nil)
+				router.ServeHTTP(w, req)
+				require.Equal(t, w.Code, http.StatusInternalServerError)
+				require.NotEmpty(t, w.Body)
+				service.AssertExpectations(t)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			require.NoError(t, err)
+			defer client.Close()
+			require.NoError(t, client.Schema.Create(context.Background()))
+
+			mockUserService := mocks.NewIUserService(t)
+			userController := NewController(mockUserService)
+
+			require.NoError(t, err)
+
+			router := gin.Default()
+			w := httptest.NewRecorder()
+
+			tt.before(t, mockUserService, router)
+			tt.expect(t, *userController, router, w, mockUserService)
+		})
+	}
+}

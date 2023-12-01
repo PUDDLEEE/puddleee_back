@@ -12,16 +12,34 @@ func HashPasswordInterceptor() gin.HandlerFunc {
 
 		body := ctx.Value("body")
 		if body != nil {
-			requestBody := body.(dto.CreateUserDTO)
-			bytes, err := bcrypt.GenerateFromPassword([]byte(requestBody.Password), 12)
-			if err != nil {
-				internalError := errors.INTERNAL_ERROR
-				internalError.Data = err.Error()
-				ctx.Error(internalError)
+
+			if requestBody, ok := body.(dto.CreateUserDTO); ok {
+				bytes, err := bcrypt.GenerateFromPassword([]byte(requestBody.Password), 12)
+				if err != nil {
+					internalError := errors.INTERNAL_ERROR
+					internalError.Data = err.Error()
+					ctx.Error(internalError)
+				}
+				requestBody.Password = string(bytes)
+				ctx.Set("body", requestBody)
+				ctx.Next()
 			}
-			requestBody.Password = string(bytes)
-			ctx.Set("body", requestBody)
-			ctx.Next()
+
+			if requestBody, ok := body.(dto.UpdateUserDTO); ok {
+				if requestBody.Password != nil {
+					bytes, err := bcrypt.GenerateFromPassword([]byte(*requestBody.Password), 12)
+					if err != nil {
+						internalError := errors.INTERNAL_ERROR
+						internalError.Data = err.Error()
+						ctx.Error(internalError)
+					}
+					hashedPassword := string(bytes)
+					requestBody.Password = &hashedPassword
+					ctx.Set("body", requestBody)
+					ctx.Next()
+				}
+			}
+
 		}
 
 	}
