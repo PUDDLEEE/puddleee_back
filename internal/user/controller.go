@@ -1,6 +1,8 @@
 package user
 
 import (
+	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces"
+	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces/mocks"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,13 +13,13 @@ import (
 )
 
 type UserController struct {
-	userService UserService
+	userService interfaces.IUserService
 }
 
 func (c *UserController) CreateUser(ctx *gin.Context) {
 	body := ctx.Value("body")
 	if body != nil {
-		requestBody := ctx.Value("body").(dto.CreateUserDTO)
+		requestBody := body.(dto.CreateUserDTO)
 		user, err := c.userService.CreateUser(requestBody)
 		if err != nil {
 			switch {
@@ -59,6 +61,12 @@ func (c *UserController) ViewProfile(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, existedUser)
 }
 
-func NewController(service UserService) UserController {
-	return UserController{userService: service}
+func NewController(service interfaces.IUserService) *UserController {
+	if userService, ok := service.(*UserService); ok {
+		return &UserController{userService: userService}
+	}
+	if mockUserService, ok := service.(*mocks.IUserService); ok {
+		return &UserController{userService: mockUserService}
+	}
+	return &UserController{}
 }

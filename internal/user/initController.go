@@ -10,5 +10,5 @@ func InitializeController(ctx context.Context, client *ent.Client) UserControlle
 	userRepository := NewUserRepository()
 	userService := NewService(userRepository, ctx, client)
 	userController := NewController(userService)
-	return userController
+	return *userController
 }

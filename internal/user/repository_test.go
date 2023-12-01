@@ -160,7 +160,7 @@ func TestUserRepository_Update(t *testing.T) {
 		expect func(*testing.T, *UserRepository, *ent.Client, context.Context)
 	}{
 		{
-			name: "Update/chould_not_update",
+			name: "Update/could_not_update",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
 
 			},

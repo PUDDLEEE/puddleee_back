@@ -47,7 +47,7 @@ func TestUserService_createUser(t *testing.T) {
 
 			userService := NewService(repo, context.Background(), client)
 			tt.before(t, repo, client, context.Background())
-			tt.expect(t, &userService, client, context.Background())
+			tt.expect(t, userService, client, context.Background())
 		})
 	}
 }
@@ -88,7 +88,7 @@ func TestUserService_findOneUser(t *testing.T) {
 
 			userService := NewService(repo, context.Background(), client)
 			tt.before(t, repo, client, context.Background())
-			tt.expect(t, &userService, client, context.Background())
+			tt.expect(t, userService, client, context.Background())
 		})
 	}
 }
