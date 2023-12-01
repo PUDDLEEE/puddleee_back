@@ -102,7 +102,7 @@ func TestUserController_ViewProfile(t *testing.T) {
 				router.GET("/api/v1/user/:id", controller.ViewProfile)
 				req, _ := http.NewRequest(http.MethodGet, "/api/v1/user/abc", nil)
 				router.ServeHTTP(w, req)
-				require.Equal(t, w.Code, http.StatusInternalServerError)
+				require.Equal(t, w.Code, http.StatusBadRequest)
 				require.NotEmpty(t, w.Body)
 				service.AssertExpectations(t)
 			},
