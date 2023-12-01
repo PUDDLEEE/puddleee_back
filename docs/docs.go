@@ -21,7 +21,7 @@ const docTemplate = `{
     "paths": {
         "/user": {
             "post": {
-                "description": "create user",
+                "description": "create user. this is testing purpose, not actual business logic. Actual Sign Up Logic is in /auth/signup.",
                 "consumes": [
                     "application/json"
                 ],

@@ -61,7 +61,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: create user
+      description: create user. this is testing purpose, not actual business logic.
+        Actual Sign Up Logic is in /auth/signup.
       parameters:
       - description: Create User Info
         in: body
