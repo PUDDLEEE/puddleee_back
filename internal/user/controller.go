@@ -1,18 +1,23 @@
 package user
 
 import (
+	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces"
+	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces/mocks"
 	_ "github.com/PUDDLEEE/puddleee_back/docs"
 	"github.com/PUDDLEEE/puddleee_back/internal/errors"
 	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 	"github.com/gin-gonic/gin"
-
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/PUDDLEEE/puddleee_back/internal/errors"
+	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
+	"github.com/gin-gonic/gin"
 )
 
 type UserController struct {
-	userService UserService
+	userService interfaces.IUserService
 }
 
 // CreateUser godoc
@@ -32,8 +37,8 @@ type UserController struct {
 func (c *UserController) CreateUser(ctx *gin.Context) {
 	body := ctx.Value("body")
 	if body != nil {
-		requestBody := ctx.Value("body").(dto.CreateUserDTO)
-		user, err := c.userService.createUser(requestBody)
+		requestBody := body.(dto.CreateUserDTO)
+		user, err := c.userService.CreateUser(requestBody)
 		if err != nil {
 			switch {
 			case strings.Contains(err.Error(), "email"):
@@ -76,7 +81,7 @@ func (c *UserController) ViewProfile(ctx *gin.Context) {
 		ctx.Error(paramError)
 		return
 	}
-	existedUser, err := c.userService.findOneUser(id)
+	existedUser, err := c.userService.FindOneUser(id)
 	if err != nil {
 		notfoundError := errors.NOT_FOUND
 		notfoundError.Data = err.Error()
@@ -86,6 +91,12 @@ func (c *UserController) ViewProfile(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, existedUser)
 }
 
-func NewController(service UserService) UserController {
-	return UserController{userService: service}
+func NewController(service interfaces.IUserService) *UserController {
+	if userService, ok := service.(*UserService); ok {
+		return &UserController{userService: userService}
+	}
+	if mockUserService, ok := service.(*mocks.IUserService); ok {
+		return &UserController{userService: mockUserService}
+	}
+	return &UserController{}
 }

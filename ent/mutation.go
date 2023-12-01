@@ -15,14 +15,14 @@ import (
 )
 
 const (
-	// Operation types.
+	// Operation interfaces.
 	OpCreate    = ent.OpCreate
 	OpDelete    = ent.OpDelete
 	OpDeleteOne = ent.OpDeleteOne
 	OpUpdate    = ent.OpUpdate
 	OpUpdateOne = ent.OpUpdateOne
 
-	// Node types.
+	// Node interfaces.
 	TypeUser = "User"
 )
 
