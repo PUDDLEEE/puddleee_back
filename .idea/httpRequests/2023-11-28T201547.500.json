@@ -1,6 +1,0 @@
-{
-  "error_code": "004",
-  "status_code": 500,
-  "msg": "email already in use.",
-  "data": "failed creating user: ent: constraint failed: UNIQUE constraint failed: users.email"
-}
