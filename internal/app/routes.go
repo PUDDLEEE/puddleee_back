@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"github.com/PUDDLEEE/puddleee_back/internal/interceptors"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
 	"sync"
 
@@ -31,7 +33,13 @@ func (app *Application) setRoutes() {
 
 	v1 := routes.Router.Group("/api/v1")
 	userController := user.InitializeController(context.Background(), app.Client)
+	routes.addSwagger(v1)
 	routes.addUser(v1, userController)
+}
+
+func (r *Routes) addSwagger(rg *gin.RouterGroup) {
+	swaggerGroup := rg.Group("/swagger")
+	swaggerGroup.GET("/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
 
 func (r *Routes) addUser(rg *gin.RouterGroup, controller user.UserController) {

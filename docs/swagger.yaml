@@ -1,0 +1,117 @@
+basePath: /api/v1
+definitions:
+  dto.CreateUserDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  ent.User:
+    properties:
+      email:
+        description: Email holds the value of the "email" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: integer
+      password:
+        description: Password holds the value of the "password" field.
+        type: string
+      username:
+        description: Username holds the value of the "username" field.
+        type: string
+    type: object
+  errors.CustomError:
+    properties:
+      data:
+        description: Data holds error data.
+      error_code:
+        description: ErrorCode holds more information that error occurred.
+        type: string
+      msg:
+        description: Msg holds error message.
+        type: string
+      status_code:
+        description: StatusCode holds http response status.
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: sjlee990129@gmail.com
+    name: MilkyMilky0116
+    url: https://milkymilky0116.github.io
+  description: Need help with live action? Puddle will help you through chat service.
+  title: Puddle Chat Application API
+  version: "1.0"
+paths:
+  /user:
+    post:
+      consumes:
+      - application/json
+      description: create user
+      parameters:
+      - description: Create User Info
+        in: body
+        name: createUserDTO
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateUserDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+      summary: Creating user
+      tags:
+      - users
+  /user/{id}:
+    get:
+      consumes:
+      - application/json
+      description: view one user's profile
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+      summary: View specific user profile
+      tags:
+      - users
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"
