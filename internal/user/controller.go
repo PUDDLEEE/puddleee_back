@@ -20,7 +20,7 @@ type UserController struct {
 //
 //	@Summary	Creating user
 //	@Schemes
-//	@Description	create user
+//	@Description	create user. this is testing purpose, not actual business logic. Actual Sign Up Logic is in /auth/signup.
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
@@ -122,6 +122,18 @@ func (c *UserController) UpdateProfile(ctx *gin.Context) {
 	}
 }
 
+// DeleteProfile godoc
+//
+//	@Summary		Delete specific user
+//	@Description	Delete one user
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"User ID"
+//	@Success		200	{object}	ent.User
+//	@Failure		400	{object}	errors.CustomError
+//	@Failure		500	{object}	errors.CustomError
+//	@Router			/user/{id} [delete]
 func (c *UserController) DeleteProfile(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
