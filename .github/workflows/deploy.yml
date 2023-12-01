@@ -15,7 +15,7 @@ jobs:
           key: ${{ secrets.REMOTE_SSH_KEY }}
           port: ${{ secrets.REMOTE_SSH_PORT }}
           script: |
-            cd ~/deploy
+            cd ~/deploy/puddleee_back
             sudo git pull origin chore/13/devDeploy
             docker-compose build
             docker-compose up -d
