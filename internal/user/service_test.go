@@ -134,3 +134,42 @@ func TestUserService_UpdateUser(t *testing.T) {
 		})
 	}
 }
+
+func TestUserService_DeleteUser(t *testing.T) {
+	tests := []struct {
+		name   string
+		before func(*testing.T, *mocks.IUserRepository, *ent.Client, context.Context)
+		expect func(*testing.T, *UserService, *ent.Client, context.Context)
+	}{
+		{
+			name: "DeleteUser/delete_user_failed",
+			before: func(t *testing.T, repo *mocks.IUserRepository, client *ent.Client, ctx context.Context) {
+				repo.On("Delete",
+					ctx,
+					client,
+					1,
+				).
+					Return(errors.New("")).
+					Once()
+			},
+			expect: func(t *testing.T, service *UserService, client *ent.Client, ctx context.Context) {
+				err := service.DeleteUser(1)
+				require.Error(t, err)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			require.NoError(t, err)
+			defer client.Close()
+			require.NoError(t, client.Schema.Create(context.Background()))
+			repo := mocks.NewIUserRepository(t)
+
+			userService := NewService(repo, context.Background(), client)
+			tt.before(t, repo, client, context.Background())
+			tt.expect(t, userService, client, context.Background())
+		})
+	}
+}
