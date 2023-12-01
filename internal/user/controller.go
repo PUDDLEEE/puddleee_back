@@ -1,19 +1,15 @@
 package user
 
 import (
-	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces"
-	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces/mocks"
 	_ "github.com/PUDDLEEE/puddleee_back/docs"
 	"github.com/PUDDLEEE/puddleee_back/internal/errors"
 	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
+	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces"
+	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces/mocks"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"strings"
-
-	"github.com/PUDDLEEE/puddleee_back/internal/errors"
-	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
-	"github.com/gin-gonic/gin"
 )
 
 type UserController struct {
