@@ -31,6 +31,18 @@ func (s *UserService) FindOneUser(id int) (*ent.User, error) {
 	return user, nil
 }
 
+func (s *UserService) UpdateUser(id int, dto dto.UpdateUserDTO) (*ent.User, error) {
+	user, err := s.userRepository.Update(s.ctx, s.client, id, dto)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *UserService) DeleteUser(id int) error {
+	return nil
+}
+
 func NewService(repo interfaces.IUserRepository, ctx context.Context, client *ent.Client) *UserService {
 	if userRepository, ok := repo.(*UserRepository); ok {
 		return &UserService{userRepository: userRepository, ctx: ctx, client: client}
