@@ -47,7 +47,7 @@ definitions:
         description: StatusCode holds http response status.
         type: integer
     type: object
-host: localhost:8080
+host: 3.35.210.183
 info:
   contact:
     email: sjlee990129@gmail.com
