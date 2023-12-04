@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"github.com/PUDDLEEE/puddleee_back/internal/interceptors"
+	"github.com/gin-contrib/cors"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
@@ -30,7 +31,7 @@ func (app *Application) initRoutes() {
 func (app *Application) setRoutes() {
 	routes.Router = gin.Default()
 	routes.Router.Use(middlewares.ErrorHandler())
-
+	routes.Router.Use(cors.Default())
 	v1 := routes.Router.Group("/api/v1")
 	userController := user.InitializeController(context.Background(), app.Client)
 	routes.addSwagger(v1)

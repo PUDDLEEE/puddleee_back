@@ -1,15 +1,17 @@
 package user
 
 import (
+	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+
 	_ "github.com/PUDDLEEE/puddleee_back/docs"
 	"github.com/PUDDLEEE/puddleee_back/internal/errors"
 	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces"
 	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces/mocks"
-	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 type UserController struct {
@@ -51,10 +53,9 @@ func (c *UserController) CreateUser(ctx *gin.Context) {
 		}
 		ctx.JSON(http.StatusCreated, user)
 	}
-
 }
-func (c *UserController) ViewUser(ctx *gin.Context) {
 
+func (c *UserController) ViewUser(ctx *gin.Context) {
 }
 
 // ViewProfile godoc
@@ -153,6 +154,7 @@ func (c *UserController) DeleteProfile(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"ok": true})
 }
+
 func NewController(service interfaces.IUserService) *UserController {
 	if userService, ok := service.(*UserService); ok {
 		return &UserController{userService: userService}
