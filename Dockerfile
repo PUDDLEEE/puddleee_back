@@ -26,6 +26,6 @@ COPY --from=build /app/config config
 
 RUN chmod +x ./puddlee
 
-EXPOSE 8080
+EXPOSE 3000
 # 어플리케이션 실행
 CMD ["./puddlee","serve"]
