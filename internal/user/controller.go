@@ -95,11 +95,11 @@ func (c *UserController) ViewProfile(ctx *gin.Context) {
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int	true	"User ID"
+//	@Param			id				path		int					true	"User ID"
 //	@Param			UpdateUserDTO	body		dto.UpdateUserDTO	true	"Update User Info"
-//	@Success		200	{object}	ent.User
-//	@Failure		400	{object}	errors.CustomError
-//	@Failure		500	{object}	errors.CustomError
+//	@Success		200				{object}	ent.User
+//	@Failure		400				{object}	errors.CustomError
+//	@Failure		500				{object}	errors.CustomError
 //	@Router			/user/{id} [patch]
 func (c *UserController) UpdateProfile(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))

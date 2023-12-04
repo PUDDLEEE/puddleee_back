@@ -13,7 +13,7 @@ import (
 //	@contact.url	https://milkymilky0116.github.io
 //	@contact.email	sjlee990129@gmail.com
 
-//	@host		0.0.0.0
+//	@host		3.35.210.183
 //	@BasePath	/api/v1
 
 // @securityDefinitions.basic	BasicAuth
