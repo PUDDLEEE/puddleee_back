@@ -5,18 +5,52 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/view"
 )
 
 // View is the model entity for the View schema.
 type View struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
-	ID           int `json:"id,omitempty"`
+	ID int `json:"id,omitempty"`
+	// CreateTime holds the value of the "create_time" field.
+	CreateTime time.Time `json:"create_time,omitempty"`
+	// UpdateTime holds the value of the "update_time" field.
+	UpdateTime time.Time `json:"update_time,omitempty"`
+	// Filepath holds the value of the "filepath" field.
+	Filepath string `json:"filepath,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ViewQuery when eager-loading is set.
+	Edges        ViewEdges `json:"edges"`
+	room_views   *int
 	selectValues sql.SelectValues
+}
+
+// ViewEdges holds the relations/edges for other nodes in the graph.
+type ViewEdges struct {
+	// Room holds the value of the room edge.
+	Room *Room `json:"room,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// RoomOrErr returns the Room value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ViewEdges) RoomOrErr() (*Room, error) {
+	if e.loadedTypes[0] {
+		if e.Room == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: room.Label}
+		}
+		return e.Room, nil
+	}
+	return nil, &NotLoadedError{edge: "room"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -25,6 +59,12 @@ func (*View) scanValues(columns []string) ([]any, error) {
 	for i := range columns {
 		switch columns[i] {
 		case view.FieldID:
+			values[i] = new(sql.NullInt64)
+		case view.FieldFilepath:
+			values[i] = new(sql.NullString)
+		case view.FieldCreateTime, view.FieldUpdateTime:
+			values[i] = new(sql.NullTime)
+		case view.ForeignKeys[0]: // room_views
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -47,6 +87,31 @@ func (v *View) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			v.ID = int(value.Int64)
+		case view.FieldCreateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field create_time", values[i])
+			} else if value.Valid {
+				v.CreateTime = value.Time
+			}
+		case view.FieldUpdateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field update_time", values[i])
+			} else if value.Valid {
+				v.UpdateTime = value.Time
+			}
+		case view.FieldFilepath:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field filepath", values[i])
+			} else if value.Valid {
+				v.Filepath = value.String
+			}
+		case view.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field room_views", value)
+			} else if value.Valid {
+				v.room_views = new(int)
+				*v.room_views = int(value.Int64)
+			}
 		default:
 			v.selectValues.Set(columns[i], values[i])
 		}
@@ -58,6 +123,11 @@ func (v *View) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (v *View) Value(name string) (ent.Value, error) {
 	return v.selectValues.Get(name)
+}
+
+// QueryRoom queries the "room" edge of the View entity.
+func (v *View) QueryRoom() *RoomQuery {
+	return NewViewClient(v.config).QueryRoom(v)
 }
 
 // Update returns a builder for updating this View.
@@ -82,7 +152,15 @@ func (v *View) Unwrap() *View {
 func (v *View) String() string {
 	var builder strings.Builder
 	builder.WriteString("View(")
-	builder.WriteString(fmt.Sprintf("id=%v", v.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", v.ID))
+	builder.WriteString("create_time=")
+	builder.WriteString(v.CreateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("update_time=")
+	builder.WriteString(v.UpdateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("filepath=")
+	builder.WriteString(v.Filepath)
 	builder.WriteByte(')')
 	return builder.String()
 }

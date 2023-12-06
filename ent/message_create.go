@@ -4,12 +4,15 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/PUDDLEEE/puddleee_back/ent/message"
 	"github.com/PUDDLEEE/puddleee_back/ent/room"
+	"github.com/PUDDLEEE/puddleee_back/ent/user"
 )
 
 // MessageCreate is the builder for creating a Message entity.
@@ -19,23 +22,64 @@ type MessageCreate struct {
 	hooks    []Hook
 }
 
-// SetRoomID sets the "room" edge to the Room entity by ID.
-func (mc *MessageCreate) SetRoomID(id int) *MessageCreate {
-	mc.mutation.SetRoomID(id)
+// SetCreateTime sets the "create_time" field.
+func (mc *MessageCreate) SetCreateTime(t time.Time) *MessageCreate {
+	mc.mutation.SetCreateTime(t)
 	return mc
 }
 
-// SetNillableRoomID sets the "room" edge to the Room entity by ID if the given value is not nil.
-func (mc *MessageCreate) SetNillableRoomID(id *int) *MessageCreate {
-	if id != nil {
-		mc = mc.SetRoomID(*id)
+// SetNillableCreateTime sets the "create_time" field if the given value is not nil.
+func (mc *MessageCreate) SetNillableCreateTime(t *time.Time) *MessageCreate {
+	if t != nil {
+		mc.SetCreateTime(*t)
 	}
 	return mc
 }
 
-// SetRoom sets the "room" edge to the Room entity.
-func (mc *MessageCreate) SetRoom(r *Room) *MessageCreate {
-	return mc.SetRoomID(r.ID)
+// SetUpdateTime sets the "update_time" field.
+func (mc *MessageCreate) SetUpdateTime(t time.Time) *MessageCreate {
+	mc.mutation.SetUpdateTime(t)
+	return mc
+}
+
+// SetNillableUpdateTime sets the "update_time" field if the given value is not nil.
+func (mc *MessageCreate) SetNillableUpdateTime(t *time.Time) *MessageCreate {
+	if t != nil {
+		mc.SetUpdateTime(*t)
+	}
+	return mc
+}
+
+// SetPayload sets the "payload" field.
+func (mc *MessageCreate) SetPayload(s string) *MessageCreate {
+	mc.mutation.SetPayload(s)
+	return mc
+}
+
+// AddRoomIDs adds the "room" edge to the Room entity by IDs.
+func (mc *MessageCreate) AddRoomIDs(ids ...int) *MessageCreate {
+	mc.mutation.AddRoomIDs(ids...)
+	return mc
+}
+
+// AddRoom adds the "room" edges to the Room entity.
+func (mc *MessageCreate) AddRoom(r ...*Room) *MessageCreate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return mc.AddRoomIDs(ids...)
+}
+
+// SetUserID sets the "user" edge to the User entity by ID.
+func (mc *MessageCreate) SetUserID(id int) *MessageCreate {
+	mc.mutation.SetUserID(id)
+	return mc
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (mc *MessageCreate) SetUser(u *User) *MessageCreate {
+	return mc.SetUserID(u.ID)
 }
 
 // Mutation returns the MessageMutation object of the builder.
@@ -45,6 +89,7 @@ func (mc *MessageCreate) Mutation() *MessageMutation {
 
 // Save creates the Message in the database.
 func (mc *MessageCreate) Save(ctx context.Context) (*Message, error) {
+	mc.defaults()
 	return withHooks(ctx, mc.sqlSave, mc.mutation, mc.hooks)
 }
 
@@ -70,8 +115,40 @@ func (mc *MessageCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (mc *MessageCreate) defaults() {
+	if _, ok := mc.mutation.CreateTime(); !ok {
+		v := message.DefaultCreateTime()
+		mc.mutation.SetCreateTime(v)
+	}
+	if _, ok := mc.mutation.UpdateTime(); !ok {
+		v := message.DefaultUpdateTime()
+		mc.mutation.SetUpdateTime(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (mc *MessageCreate) check() error {
+	if _, ok := mc.mutation.CreateTime(); !ok {
+		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "Message.create_time"`)}
+	}
+	if _, ok := mc.mutation.UpdateTime(); !ok {
+		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "Message.update_time"`)}
+	}
+	if _, ok := mc.mutation.Payload(); !ok {
+		return &ValidationError{Name: "payload", err: errors.New(`ent: missing required field "Message.payload"`)}
+	}
+	if v, ok := mc.mutation.Payload(); ok {
+		if err := message.PayloadValidator(v); err != nil {
+			return &ValidationError{Name: "payload", err: fmt.Errorf(`ent: validator failed for field "Message.payload": %w`, err)}
+		}
+	}
+	if len(mc.mutation.RoomIDs()) == 0 {
+		return &ValidationError{Name: "room", err: errors.New(`ent: missing required edge "Message.room"`)}
+	}
+	if _, ok := mc.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Message.user"`)}
+	}
 	return nil
 }
 
@@ -98,12 +175,24 @@ func (mc *MessageCreate) createSpec() (*Message, *sqlgraph.CreateSpec) {
 		_node = &Message{config: mc.config}
 		_spec = sqlgraph.NewCreateSpec(message.Table, sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt))
 	)
+	if value, ok := mc.mutation.CreateTime(); ok {
+		_spec.SetField(message.FieldCreateTime, field.TypeTime, value)
+		_node.CreateTime = value
+	}
+	if value, ok := mc.mutation.UpdateTime(); ok {
+		_spec.SetField(message.FieldUpdateTime, field.TypeTime, value)
+		_node.UpdateTime = value
+	}
+	if value, ok := mc.mutation.Payload(); ok {
+		_spec.SetField(message.FieldPayload, field.TypeString, value)
+		_node.Payload = value
+	}
 	if nodes := mc.mutation.RoomIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   message.RoomTable,
-			Columns: []string{message.RoomColumn},
+			Columns: message.RoomPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
@@ -112,7 +201,23 @@ func (mc *MessageCreate) createSpec() (*Message, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.message_room = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := mc.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   message.UserTable,
+			Columns: []string{message.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_messages = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -136,6 +241,7 @@ func (mcb *MessageCreateBulk) Save(ctx context.Context) ([]*Message, error) {
 	for i := range mcb.builders {
 		func(i int, root context.Context) {
 			builder := mcb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*MessageMutation)
 				if !ok {

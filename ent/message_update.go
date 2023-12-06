@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -13,6 +14,7 @@ import (
 	"github.com/PUDDLEEE/puddleee_back/ent/message"
 	"github.com/PUDDLEEE/puddleee_back/ent/predicate"
 	"github.com/PUDDLEEE/puddleee_back/ent/room"
+	"github.com/PUDDLEEE/puddleee_back/ent/user"
 )
 
 // MessageUpdate is the builder for updating Message entities.
@@ -28,23 +30,36 @@ func (mu *MessageUpdate) Where(ps ...predicate.Message) *MessageUpdate {
 	return mu
 }
 
-// SetRoomID sets the "room" edge to the Room entity by ID.
-func (mu *MessageUpdate) SetRoomID(id int) *MessageUpdate {
-	mu.mutation.SetRoomID(id)
+// SetUpdateTime sets the "update_time" field.
+func (mu *MessageUpdate) SetUpdateTime(t time.Time) *MessageUpdate {
+	mu.mutation.SetUpdateTime(t)
 	return mu
 }
 
-// SetNillableRoomID sets the "room" edge to the Room entity by ID if the given value is not nil.
-func (mu *MessageUpdate) SetNillableRoomID(id *int) *MessageUpdate {
-	if id != nil {
-		mu = mu.SetRoomID(*id)
+// AddRoomIDs adds the "room" edge to the Room entity by IDs.
+func (mu *MessageUpdate) AddRoomIDs(ids ...int) *MessageUpdate {
+	mu.mutation.AddRoomIDs(ids...)
+	return mu
+}
+
+// AddRoom adds the "room" edges to the Room entity.
+func (mu *MessageUpdate) AddRoom(r ...*Room) *MessageUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
+	return mu.AddRoomIDs(ids...)
+}
+
+// SetUserID sets the "user" edge to the User entity by ID.
+func (mu *MessageUpdate) SetUserID(id int) *MessageUpdate {
+	mu.mutation.SetUserID(id)
 	return mu
 }
 
-// SetRoom sets the "room" edge to the Room entity.
-func (mu *MessageUpdate) SetRoom(r *Room) *MessageUpdate {
-	return mu.SetRoomID(r.ID)
+// SetUser sets the "user" edge to the User entity.
+func (mu *MessageUpdate) SetUser(u *User) *MessageUpdate {
+	return mu.SetUserID(u.ID)
 }
 
 // Mutation returns the MessageMutation object of the builder.
@@ -52,14 +67,36 @@ func (mu *MessageUpdate) Mutation() *MessageMutation {
 	return mu.mutation
 }
 
-// ClearRoom clears the "room" edge to the Room entity.
+// ClearRoom clears all "room" edges to the Room entity.
 func (mu *MessageUpdate) ClearRoom() *MessageUpdate {
 	mu.mutation.ClearRoom()
 	return mu
 }
 
+// RemoveRoomIDs removes the "room" edge to Room entities by IDs.
+func (mu *MessageUpdate) RemoveRoomIDs(ids ...int) *MessageUpdate {
+	mu.mutation.RemoveRoomIDs(ids...)
+	return mu
+}
+
+// RemoveRoom removes "room" edges to Room entities.
+func (mu *MessageUpdate) RemoveRoom(r ...*Room) *MessageUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return mu.RemoveRoomIDs(ids...)
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (mu *MessageUpdate) ClearUser() *MessageUpdate {
+	mu.mutation.ClearUser()
+	return mu
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (mu *MessageUpdate) Save(ctx context.Context) (int, error) {
+	mu.defaults()
 	return withHooks(ctx, mu.sqlSave, mu.mutation, mu.hooks)
 }
 
@@ -85,7 +122,26 @@ func (mu *MessageUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (mu *MessageUpdate) defaults() {
+	if _, ok := mu.mutation.UpdateTime(); !ok {
+		v := message.UpdateDefaultUpdateTime()
+		mu.mutation.SetUpdateTime(v)
+	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (mu *MessageUpdate) check() error {
+	if _, ok := mu.mutation.UserID(); mu.mutation.UserCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Message.user"`)
+	}
+	return nil
+}
+
 func (mu *MessageUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := mu.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(message.Table, message.Columns, sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt))
 	if ps := mu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -94,12 +150,15 @@ func (mu *MessageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := mu.mutation.UpdateTime(); ok {
+		_spec.SetField(message.FieldUpdateTime, field.TypeTime, value)
+	}
 	if mu.mutation.RoomCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   message.RoomTable,
-			Columns: []string{message.RoomColumn},
+			Columns: message.RoomPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
@@ -107,15 +166,60 @@ func (mu *MessageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mu.mutation.RoomIDs(); len(nodes) > 0 {
+	if nodes := mu.mutation.RemovedRoomIDs(); len(nodes) > 0 && !mu.mutation.RoomCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   message.RoomTable,
-			Columns: []string{message.RoomColumn},
+			Columns: message.RoomPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := mu.mutation.RoomIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   message.RoomTable,
+			Columns: message.RoomPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if mu.mutation.UserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   message.UserTable,
+			Columns: []string{message.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := mu.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   message.UserTable,
+			Columns: []string{message.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -143,23 +247,36 @@ type MessageUpdateOne struct {
 	mutation *MessageMutation
 }
 
-// SetRoomID sets the "room" edge to the Room entity by ID.
-func (muo *MessageUpdateOne) SetRoomID(id int) *MessageUpdateOne {
-	muo.mutation.SetRoomID(id)
+// SetUpdateTime sets the "update_time" field.
+func (muo *MessageUpdateOne) SetUpdateTime(t time.Time) *MessageUpdateOne {
+	muo.mutation.SetUpdateTime(t)
 	return muo
 }
 
-// SetNillableRoomID sets the "room" edge to the Room entity by ID if the given value is not nil.
-func (muo *MessageUpdateOne) SetNillableRoomID(id *int) *MessageUpdateOne {
-	if id != nil {
-		muo = muo.SetRoomID(*id)
+// AddRoomIDs adds the "room" edge to the Room entity by IDs.
+func (muo *MessageUpdateOne) AddRoomIDs(ids ...int) *MessageUpdateOne {
+	muo.mutation.AddRoomIDs(ids...)
+	return muo
+}
+
+// AddRoom adds the "room" edges to the Room entity.
+func (muo *MessageUpdateOne) AddRoom(r ...*Room) *MessageUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
+	return muo.AddRoomIDs(ids...)
+}
+
+// SetUserID sets the "user" edge to the User entity by ID.
+func (muo *MessageUpdateOne) SetUserID(id int) *MessageUpdateOne {
+	muo.mutation.SetUserID(id)
 	return muo
 }
 
-// SetRoom sets the "room" edge to the Room entity.
-func (muo *MessageUpdateOne) SetRoom(r *Room) *MessageUpdateOne {
-	return muo.SetRoomID(r.ID)
+// SetUser sets the "user" edge to the User entity.
+func (muo *MessageUpdateOne) SetUser(u *User) *MessageUpdateOne {
+	return muo.SetUserID(u.ID)
 }
 
 // Mutation returns the MessageMutation object of the builder.
@@ -167,9 +284,30 @@ func (muo *MessageUpdateOne) Mutation() *MessageMutation {
 	return muo.mutation
 }
 
-// ClearRoom clears the "room" edge to the Room entity.
+// ClearRoom clears all "room" edges to the Room entity.
 func (muo *MessageUpdateOne) ClearRoom() *MessageUpdateOne {
 	muo.mutation.ClearRoom()
+	return muo
+}
+
+// RemoveRoomIDs removes the "room" edge to Room entities by IDs.
+func (muo *MessageUpdateOne) RemoveRoomIDs(ids ...int) *MessageUpdateOne {
+	muo.mutation.RemoveRoomIDs(ids...)
+	return muo
+}
+
+// RemoveRoom removes "room" edges to Room entities.
+func (muo *MessageUpdateOne) RemoveRoom(r ...*Room) *MessageUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return muo.RemoveRoomIDs(ids...)
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (muo *MessageUpdateOne) ClearUser() *MessageUpdateOne {
+	muo.mutation.ClearUser()
 	return muo
 }
 
@@ -188,6 +326,7 @@ func (muo *MessageUpdateOne) Select(field string, fields ...string) *MessageUpda
 
 // Save executes the query and returns the updated Message entity.
 func (muo *MessageUpdateOne) Save(ctx context.Context) (*Message, error) {
+	muo.defaults()
 	return withHooks(ctx, muo.sqlSave, muo.mutation, muo.hooks)
 }
 
@@ -213,7 +352,26 @@ func (muo *MessageUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (muo *MessageUpdateOne) defaults() {
+	if _, ok := muo.mutation.UpdateTime(); !ok {
+		v := message.UpdateDefaultUpdateTime()
+		muo.mutation.SetUpdateTime(v)
+	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (muo *MessageUpdateOne) check() error {
+	if _, ok := muo.mutation.UserID(); muo.mutation.UserCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Message.user"`)
+	}
+	return nil
+}
+
 func (muo *MessageUpdateOne) sqlSave(ctx context.Context) (_node *Message, err error) {
+	if err := muo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(message.Table, message.Columns, sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt))
 	id, ok := muo.mutation.ID()
 	if !ok {
@@ -239,12 +397,15 @@ func (muo *MessageUpdateOne) sqlSave(ctx context.Context) (_node *Message, err e
 			}
 		}
 	}
+	if value, ok := muo.mutation.UpdateTime(); ok {
+		_spec.SetField(message.FieldUpdateTime, field.TypeTime, value)
+	}
 	if muo.mutation.RoomCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   message.RoomTable,
-			Columns: []string{message.RoomColumn},
+			Columns: message.RoomPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
@@ -252,15 +413,60 @@ func (muo *MessageUpdateOne) sqlSave(ctx context.Context) (_node *Message, err e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := muo.mutation.RoomIDs(); len(nodes) > 0 {
+	if nodes := muo.mutation.RemovedRoomIDs(); len(nodes) > 0 && !muo.mutation.RoomCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   message.RoomTable,
-			Columns: []string{message.RoomColumn},
+			Columns: message.RoomPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := muo.mutation.RoomIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   message.RoomTable,
+			Columns: message.RoomPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if muo.mutation.UserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   message.UserTable,
+			Columns: []string{message.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := muo.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   message.UserTable,
+			Columns: []string{message.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

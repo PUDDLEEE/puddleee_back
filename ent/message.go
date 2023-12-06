@@ -5,45 +5,63 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/PUDDLEEE/puddleee_back/ent/message"
-	"github.com/PUDDLEEE/puddleee_back/ent/room"
+	"github.com/PUDDLEEE/puddleee_back/ent/user"
 )
 
 // Message is the model entity for the Message schema.
 type Message struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// CreateTime holds the value of the "create_time" field.
+	CreateTime time.Time `json:"create_time,omitempty"`
+	// UpdateTime holds the value of the "update_time" field.
+	UpdateTime time.Time `json:"update_time,omitempty"`
+	// Payload holds the value of the "payload" field.
+	Payload string `json:"payload,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the MessageQuery when eager-loading is set.
-	Edges        MessageEdges `json:"edges"`
-	message_room *int
-	selectValues sql.SelectValues
+	Edges         MessageEdges `json:"edges"`
+	user_messages *int
+	selectValues  sql.SelectValues
 }
 
 // MessageEdges holds the relations/edges for other nodes in the graph.
 type MessageEdges struct {
 	// Room holds the value of the room edge.
-	Room *Room `json:"room,omitempty"`
+	Room []*Room `json:"room,omitempty"`
+	// User holds the value of the user edge.
+	User *User `json:"user,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // RoomOrErr returns the Room value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e MessageEdges) RoomOrErr() (*Room, error) {
+// was not loaded in eager-loading.
+func (e MessageEdges) RoomOrErr() ([]*Room, error) {
 	if e.loadedTypes[0] {
-		if e.Room == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: room.Label}
-		}
 		return e.Room, nil
 	}
 	return nil, &NotLoadedError{edge: "room"}
+}
+
+// UserOrErr returns the User value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e MessageEdges) UserOrErr() (*User, error) {
+	if e.loadedTypes[1] {
+		if e.User == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: user.Label}
+		}
+		return e.User, nil
+	}
+	return nil, &NotLoadedError{edge: "user"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -53,7 +71,11 @@ func (*Message) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case message.FieldID:
 			values[i] = new(sql.NullInt64)
-		case message.ForeignKeys[0]: // message_room
+		case message.FieldPayload:
+			values[i] = new(sql.NullString)
+		case message.FieldCreateTime, message.FieldUpdateTime:
+			values[i] = new(sql.NullTime)
+		case message.ForeignKeys[0]: // user_messages
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -76,12 +98,30 @@ func (m *Message) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			m.ID = int(value.Int64)
+		case message.FieldCreateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field create_time", values[i])
+			} else if value.Valid {
+				m.CreateTime = value.Time
+			}
+		case message.FieldUpdateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field update_time", values[i])
+			} else if value.Valid {
+				m.UpdateTime = value.Time
+			}
+		case message.FieldPayload:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field payload", values[i])
+			} else if value.Valid {
+				m.Payload = value.String
+			}
 		case message.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field message_room", value)
+				return fmt.Errorf("unexpected type %T for edge-field user_messages", value)
 			} else if value.Valid {
-				m.message_room = new(int)
-				*m.message_room = int(value.Int64)
+				m.user_messages = new(int)
+				*m.user_messages = int(value.Int64)
 			}
 		default:
 			m.selectValues.Set(columns[i], values[i])
@@ -99,6 +139,11 @@ func (m *Message) Value(name string) (ent.Value, error) {
 // QueryRoom queries the "room" edge of the Message entity.
 func (m *Message) QueryRoom() *RoomQuery {
 	return NewMessageClient(m.config).QueryRoom(m)
+}
+
+// QueryUser queries the "user" edge of the Message entity.
+func (m *Message) QueryUser() *UserQuery {
+	return NewMessageClient(m.config).QueryUser(m)
 }
 
 // Update returns a builder for updating this Message.
@@ -123,7 +168,15 @@ func (m *Message) Unwrap() *Message {
 func (m *Message) String() string {
 	var builder strings.Builder
 	builder.WriteString("Message(")
-	builder.WriteString(fmt.Sprintf("id=%v", m.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", m.ID))
+	builder.WriteString("create_time=")
+	builder.WriteString(m.CreateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("update_time=")
+	builder.WriteString(m.UpdateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("payload=")
+	builder.WriteString(m.Payload)
 	builder.WriteByte(')')
 	return builder.String()
 }

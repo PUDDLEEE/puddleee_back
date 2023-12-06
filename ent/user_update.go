@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/PUDDLEEE/puddleee_back/ent/message"
 	"github.com/PUDDLEEE/puddleee_back/ent/predicate"
 	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
@@ -77,6 +78,12 @@ func (uu *UserUpdate) SetNillableProfileImg(s *string) *UserUpdate {
 	return uu
 }
 
+// ClearProfileImg clears the value of the "profile_img" field.
+func (uu *UserUpdate) ClearProfileImg() *UserUpdate {
+	uu.mutation.ClearProfileImg()
+	return uu
+}
+
 // SetPassword sets the "password" field.
 func (uu *UserUpdate) SetPassword(s string) *UserUpdate {
 	uu.mutation.SetPassword(s)
@@ -119,6 +126,21 @@ func (uu *UserUpdate) AddParticipantRooms(r ...*Room) *UserUpdate {
 		ids[i] = r[i].ID
 	}
 	return uu.AddParticipantRoomIDs(ids...)
+}
+
+// AddMessageIDs adds the "messages" edge to the Message entity by IDs.
+func (uu *UserUpdate) AddMessageIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddMessageIDs(ids...)
+	return uu
+}
+
+// AddMessages adds the "messages" edges to the Message entity.
+func (uu *UserUpdate) AddMessages(m ...*Message) *UserUpdate {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uu.AddMessageIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -166,6 +188,27 @@ func (uu *UserUpdate) RemoveParticipantRooms(r ...*Room) *UserUpdate {
 		ids[i] = r[i].ID
 	}
 	return uu.RemoveParticipantRoomIDs(ids...)
+}
+
+// ClearMessages clears all "messages" edges to the Message entity.
+func (uu *UserUpdate) ClearMessages() *UserUpdate {
+	uu.mutation.ClearMessages()
+	return uu
+}
+
+// RemoveMessageIDs removes the "messages" edge to Message entities by IDs.
+func (uu *UserUpdate) RemoveMessageIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveMessageIDs(ids...)
+	return uu
+}
+
+// RemoveMessages removes "messages" edges to Message entities.
+func (uu *UserUpdate) RemoveMessages(m ...*Message) *UserUpdate {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uu.RemoveMessageIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -247,6 +290,9 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.ProfileImg(); ok {
 		_spec.SetField(user.FieldProfileImg, field.TypeString, value)
+	}
+	if uu.mutation.ProfileImgCleared() {
+		_spec.ClearField(user.FieldProfileImg, field.TypeString)
 	}
 	if value, ok := uu.mutation.Password(); ok {
 		_spec.SetField(user.FieldPassword, field.TypeString, value)
@@ -341,6 +387,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MessagesTable,
+			Columns: []string{user.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedMessagesIDs(); len(nodes) > 0 && !uu.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MessagesTable,
+			Columns: []string{user.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.MessagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MessagesTable,
+			Columns: []string{user.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -409,6 +500,12 @@ func (uuo *UserUpdateOne) SetNillableProfileImg(s *string) *UserUpdateOne {
 	return uuo
 }
 
+// ClearProfileImg clears the value of the "profile_img" field.
+func (uuo *UserUpdateOne) ClearProfileImg() *UserUpdateOne {
+	uuo.mutation.ClearProfileImg()
+	return uuo
+}
+
 // SetPassword sets the "password" field.
 func (uuo *UserUpdateOne) SetPassword(s string) *UserUpdateOne {
 	uuo.mutation.SetPassword(s)
@@ -451,6 +548,21 @@ func (uuo *UserUpdateOne) AddParticipantRooms(r ...*Room) *UserUpdateOne {
 		ids[i] = r[i].ID
 	}
 	return uuo.AddParticipantRoomIDs(ids...)
+}
+
+// AddMessageIDs adds the "messages" edge to the Message entity by IDs.
+func (uuo *UserUpdateOne) AddMessageIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddMessageIDs(ids...)
+	return uuo
+}
+
+// AddMessages adds the "messages" edges to the Message entity.
+func (uuo *UserUpdateOne) AddMessages(m ...*Message) *UserUpdateOne {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uuo.AddMessageIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -498,6 +610,27 @@ func (uuo *UserUpdateOne) RemoveParticipantRooms(r ...*Room) *UserUpdateOne {
 		ids[i] = r[i].ID
 	}
 	return uuo.RemoveParticipantRoomIDs(ids...)
+}
+
+// ClearMessages clears all "messages" edges to the Message entity.
+func (uuo *UserUpdateOne) ClearMessages() *UserUpdateOne {
+	uuo.mutation.ClearMessages()
+	return uuo
+}
+
+// RemoveMessageIDs removes the "messages" edge to Message entities by IDs.
+func (uuo *UserUpdateOne) RemoveMessageIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveMessageIDs(ids...)
+	return uuo
+}
+
+// RemoveMessages removes "messages" edges to Message entities.
+func (uuo *UserUpdateOne) RemoveMessages(m ...*Message) *UserUpdateOne {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uuo.RemoveMessageIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -610,6 +743,9 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.ProfileImg(); ok {
 		_spec.SetField(user.FieldProfileImg, field.TypeString, value)
 	}
+	if uuo.mutation.ProfileImgCleared() {
+		_spec.ClearField(user.FieldProfileImg, field.TypeString)
+	}
 	if value, ok := uuo.mutation.Password(); ok {
 		_spec.SetField(user.FieldPassword, field.TypeString, value)
 	}
@@ -696,6 +832,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MessagesTable,
+			Columns: []string{user.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedMessagesIDs(); len(nodes) > 0 && !uuo.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MessagesTable,
+			Columns: []string{user.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.MessagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MessagesTable,
+			Columns: []string{user.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

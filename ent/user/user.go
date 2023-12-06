@@ -30,6 +30,8 @@ const (
 	EdgeOwnRooms = "own_rooms"
 	// EdgeParticipantRooms holds the string denoting the participant_rooms edge name in mutations.
 	EdgeParticipantRooms = "participant_rooms"
+	// EdgeMessages holds the string denoting the messages edge name in mutations.
+	EdgeMessages = "messages"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// OwnRoomsTable is the table that holds the own_rooms relation/edge.
@@ -44,6 +46,13 @@ const (
 	// ParticipantRoomsInverseTable is the table name for the Room entity.
 	// It exists in this package in order to avoid circular dependency with the "room" package.
 	ParticipantRoomsInverseTable = "rooms"
+	// MessagesTable is the table that holds the messages relation/edge.
+	MessagesTable = "messages"
+	// MessagesInverseTable is the table name for the Message entity.
+	// It exists in this package in order to avoid circular dependency with the "message" package.
+	MessagesInverseTable = "messages"
+	// MessagesColumn is the table column denoting the messages relation/edge.
+	MessagesColumn = "user_messages"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -153,6 +162,20 @@ func ByParticipantRooms(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption 
 		sqlgraph.OrderByNeighborTerms(s, newParticipantRoomsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByMessagesCount orders the results by messages count.
+func ByMessagesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMessagesStep(), opts...)
+	}
+}
+
+// ByMessages orders the results by messages terms.
+func ByMessages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMessagesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newOwnRoomsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -165,5 +188,12 @@ func newParticipantRoomsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ParticipantRoomsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, ParticipantRoomsTable, ParticipantRoomsPrimaryKey...),
+	)
+}
+func newMessagesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MessagesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MessagesTable, MessagesColumn),
 	)
 }

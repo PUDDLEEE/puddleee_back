@@ -3,6 +3,8 @@
 package message
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/PUDDLEEE/puddleee_back/ent/predicate"
@@ -53,12 +55,172 @@ func IDLTE(id int) predicate.Message {
 	return predicate.Message(sql.FieldLTE(FieldID, id))
 }
 
+// CreateTime applies equality check predicate on the "create_time" field. It's identical to CreateTimeEQ.
+func CreateTime(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldEQ(FieldCreateTime, v))
+}
+
+// UpdateTime applies equality check predicate on the "update_time" field. It's identical to UpdateTimeEQ.
+func UpdateTime(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldEQ(FieldUpdateTime, v))
+}
+
+// Payload applies equality check predicate on the "payload" field. It's identical to PayloadEQ.
+func Payload(v string) predicate.Message {
+	return predicate.Message(sql.FieldEQ(FieldPayload, v))
+}
+
+// CreateTimeEQ applies the EQ predicate on the "create_time" field.
+func CreateTimeEQ(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldEQ(FieldCreateTime, v))
+}
+
+// CreateTimeNEQ applies the NEQ predicate on the "create_time" field.
+func CreateTimeNEQ(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldNEQ(FieldCreateTime, v))
+}
+
+// CreateTimeIn applies the In predicate on the "create_time" field.
+func CreateTimeIn(vs ...time.Time) predicate.Message {
+	return predicate.Message(sql.FieldIn(FieldCreateTime, vs...))
+}
+
+// CreateTimeNotIn applies the NotIn predicate on the "create_time" field.
+func CreateTimeNotIn(vs ...time.Time) predicate.Message {
+	return predicate.Message(sql.FieldNotIn(FieldCreateTime, vs...))
+}
+
+// CreateTimeGT applies the GT predicate on the "create_time" field.
+func CreateTimeGT(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldGT(FieldCreateTime, v))
+}
+
+// CreateTimeGTE applies the GTE predicate on the "create_time" field.
+func CreateTimeGTE(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldGTE(FieldCreateTime, v))
+}
+
+// CreateTimeLT applies the LT predicate on the "create_time" field.
+func CreateTimeLT(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldLT(FieldCreateTime, v))
+}
+
+// CreateTimeLTE applies the LTE predicate on the "create_time" field.
+func CreateTimeLTE(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldLTE(FieldCreateTime, v))
+}
+
+// UpdateTimeEQ applies the EQ predicate on the "update_time" field.
+func UpdateTimeEQ(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldEQ(FieldUpdateTime, v))
+}
+
+// UpdateTimeNEQ applies the NEQ predicate on the "update_time" field.
+func UpdateTimeNEQ(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldNEQ(FieldUpdateTime, v))
+}
+
+// UpdateTimeIn applies the In predicate on the "update_time" field.
+func UpdateTimeIn(vs ...time.Time) predicate.Message {
+	return predicate.Message(sql.FieldIn(FieldUpdateTime, vs...))
+}
+
+// UpdateTimeNotIn applies the NotIn predicate on the "update_time" field.
+func UpdateTimeNotIn(vs ...time.Time) predicate.Message {
+	return predicate.Message(sql.FieldNotIn(FieldUpdateTime, vs...))
+}
+
+// UpdateTimeGT applies the GT predicate on the "update_time" field.
+func UpdateTimeGT(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldGT(FieldUpdateTime, v))
+}
+
+// UpdateTimeGTE applies the GTE predicate on the "update_time" field.
+func UpdateTimeGTE(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldGTE(FieldUpdateTime, v))
+}
+
+// UpdateTimeLT applies the LT predicate on the "update_time" field.
+func UpdateTimeLT(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldLT(FieldUpdateTime, v))
+}
+
+// UpdateTimeLTE applies the LTE predicate on the "update_time" field.
+func UpdateTimeLTE(v time.Time) predicate.Message {
+	return predicate.Message(sql.FieldLTE(FieldUpdateTime, v))
+}
+
+// PayloadEQ applies the EQ predicate on the "payload" field.
+func PayloadEQ(v string) predicate.Message {
+	return predicate.Message(sql.FieldEQ(FieldPayload, v))
+}
+
+// PayloadNEQ applies the NEQ predicate on the "payload" field.
+func PayloadNEQ(v string) predicate.Message {
+	return predicate.Message(sql.FieldNEQ(FieldPayload, v))
+}
+
+// PayloadIn applies the In predicate on the "payload" field.
+func PayloadIn(vs ...string) predicate.Message {
+	return predicate.Message(sql.FieldIn(FieldPayload, vs...))
+}
+
+// PayloadNotIn applies the NotIn predicate on the "payload" field.
+func PayloadNotIn(vs ...string) predicate.Message {
+	return predicate.Message(sql.FieldNotIn(FieldPayload, vs...))
+}
+
+// PayloadGT applies the GT predicate on the "payload" field.
+func PayloadGT(v string) predicate.Message {
+	return predicate.Message(sql.FieldGT(FieldPayload, v))
+}
+
+// PayloadGTE applies the GTE predicate on the "payload" field.
+func PayloadGTE(v string) predicate.Message {
+	return predicate.Message(sql.FieldGTE(FieldPayload, v))
+}
+
+// PayloadLT applies the LT predicate on the "payload" field.
+func PayloadLT(v string) predicate.Message {
+	return predicate.Message(sql.FieldLT(FieldPayload, v))
+}
+
+// PayloadLTE applies the LTE predicate on the "payload" field.
+func PayloadLTE(v string) predicate.Message {
+	return predicate.Message(sql.FieldLTE(FieldPayload, v))
+}
+
+// PayloadContains applies the Contains predicate on the "payload" field.
+func PayloadContains(v string) predicate.Message {
+	return predicate.Message(sql.FieldContains(FieldPayload, v))
+}
+
+// PayloadHasPrefix applies the HasPrefix predicate on the "payload" field.
+func PayloadHasPrefix(v string) predicate.Message {
+	return predicate.Message(sql.FieldHasPrefix(FieldPayload, v))
+}
+
+// PayloadHasSuffix applies the HasSuffix predicate on the "payload" field.
+func PayloadHasSuffix(v string) predicate.Message {
+	return predicate.Message(sql.FieldHasSuffix(FieldPayload, v))
+}
+
+// PayloadEqualFold applies the EqualFold predicate on the "payload" field.
+func PayloadEqualFold(v string) predicate.Message {
+	return predicate.Message(sql.FieldEqualFold(FieldPayload, v))
+}
+
+// PayloadContainsFold applies the ContainsFold predicate on the "payload" field.
+func PayloadContainsFold(v string) predicate.Message {
+	return predicate.Message(sql.FieldContainsFold(FieldPayload, v))
+}
+
 // HasRoom applies the HasEdge predicate on the "room" edge.
 func HasRoom() predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, RoomTable, RoomColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, RoomTable, RoomPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -68,6 +230,29 @@ func HasRoom() predicate.Message {
 func HasRoomWith(preds ...predicate.Room) predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
 		step := newRoomStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUser applies the HasEdge predicate on the "user" edge.
+func HasUser() predicate.Message {
+	return predicate.Message(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
+func HasUserWith(preds ...predicate.User) predicate.Message {
+	return predicate.Message(func(s *sql.Selector) {
+		step := newUserStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

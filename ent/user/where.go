@@ -350,6 +350,16 @@ func ProfileImgHasSuffix(v string) predicate.User {
 	return predicate.User(sql.FieldHasSuffix(FieldProfileImg, v))
 }
 
+// ProfileImgIsNil applies the IsNil predicate on the "profile_img" field.
+func ProfileImgIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldProfileImg))
+}
+
+// ProfileImgNotNil applies the NotNil predicate on the "profile_img" field.
+func ProfileImgNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldProfileImg))
+}
+
 // ProfileImgEqualFold applies the EqualFold predicate on the "profile_img" field.
 func ProfileImgEqualFold(v string) predicate.User {
 	return predicate.User(sql.FieldEqualFold(FieldProfileImg, v))
@@ -463,6 +473,29 @@ func HasParticipantRooms() predicate.User {
 func HasParticipantRoomsWith(preds ...predicate.Room) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newParticipantRoomsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasMessages applies the HasEdge predicate on the "messages" edge.
+func HasMessages() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, MessagesTable, MessagesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMessagesWith applies the HasEdge predicate on the "messages" edge with a given conditions (other predicates).
+func HasMessagesWith(preds ...predicate.Message) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newMessagesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

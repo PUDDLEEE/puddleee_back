@@ -6,12 +6,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/PUDDLEEE/puddleee_back/ent/category"
 	"github.com/PUDDLEEE/puddleee_back/ent/message"
 	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
+	"github.com/PUDDLEEE/puddleee_back/ent/view"
 )
 
 // RoomCreate is the builder for creating a Room entity.
@@ -19,6 +22,34 @@ type RoomCreate struct {
 	config
 	mutation *RoomMutation
 	hooks    []Hook
+}
+
+// SetCreateTime sets the "create_time" field.
+func (rc *RoomCreate) SetCreateTime(t time.Time) *RoomCreate {
+	rc.mutation.SetCreateTime(t)
+	return rc
+}
+
+// SetNillableCreateTime sets the "create_time" field if the given value is not nil.
+func (rc *RoomCreate) SetNillableCreateTime(t *time.Time) *RoomCreate {
+	if t != nil {
+		rc.SetCreateTime(*t)
+	}
+	return rc
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (rc *RoomCreate) SetUpdateTime(t time.Time) *RoomCreate {
+	rc.mutation.SetUpdateTime(t)
+	return rc
+}
+
+// SetNillableUpdateTime sets the "update_time" field if the given value is not nil.
+func (rc *RoomCreate) SetNillableUpdateTime(t *time.Time) *RoomCreate {
+	if t != nil {
+		rc.SetUpdateTime(*t)
+	}
+	return rc
 }
 
 // SetTitle sets the "title" field.
@@ -75,19 +106,53 @@ func (rc *RoomCreate) AddRespondent(u ...*User) *RoomCreate {
 	return rc.AddRespondentIDs(ids...)
 }
 
-// AddMessageIDs adds the "message" edge to the Message entity by IDs.
+// SetCategoryID sets the "category" edge to the Category entity by ID.
+func (rc *RoomCreate) SetCategoryID(id int) *RoomCreate {
+	rc.mutation.SetCategoryID(id)
+	return rc
+}
+
+// SetNillableCategoryID sets the "category" edge to the Category entity by ID if the given value is not nil.
+func (rc *RoomCreate) SetNillableCategoryID(id *int) *RoomCreate {
+	if id != nil {
+		rc = rc.SetCategoryID(*id)
+	}
+	return rc
+}
+
+// SetCategory sets the "category" edge to the Category entity.
+func (rc *RoomCreate) SetCategory(c *Category) *RoomCreate {
+	return rc.SetCategoryID(c.ID)
+}
+
+// AddMessageIDs adds the "messages" edge to the Message entity by IDs.
 func (rc *RoomCreate) AddMessageIDs(ids ...int) *RoomCreate {
 	rc.mutation.AddMessageIDs(ids...)
 	return rc
 }
 
-// AddMessage adds the "message" edges to the Message entity.
-func (rc *RoomCreate) AddMessage(m ...*Message) *RoomCreate {
+// AddMessages adds the "messages" edges to the Message entity.
+func (rc *RoomCreate) AddMessages(m ...*Message) *RoomCreate {
 	ids := make([]int, len(m))
 	for i := range m {
 		ids[i] = m[i].ID
 	}
 	return rc.AddMessageIDs(ids...)
+}
+
+// AddViewIDs adds the "views" edge to the View entity by IDs.
+func (rc *RoomCreate) AddViewIDs(ids ...int) *RoomCreate {
+	rc.mutation.AddViewIDs(ids...)
+	return rc
+}
+
+// AddViews adds the "views" edges to the View entity.
+func (rc *RoomCreate) AddViews(v ...*View) *RoomCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return rc.AddViewIDs(ids...)
 }
 
 // Mutation returns the RoomMutation object of the builder.
@@ -125,6 +190,14 @@ func (rc *RoomCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (rc *RoomCreate) defaults() {
+	if _, ok := rc.mutation.CreateTime(); !ok {
+		v := room.DefaultCreateTime()
+		rc.mutation.SetCreateTime(v)
+	}
+	if _, ok := rc.mutation.UpdateTime(); !ok {
+		v := room.DefaultUpdateTime()
+		rc.mutation.SetUpdateTime(v)
+	}
 	if _, ok := rc.mutation.IsCompleted(); !ok {
 		v := room.DefaultIsCompleted
 		rc.mutation.SetIsCompleted(v)
@@ -133,6 +206,12 @@ func (rc *RoomCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (rc *RoomCreate) check() error {
+	if _, ok := rc.mutation.CreateTime(); !ok {
+		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "Room.create_time"`)}
+	}
+	if _, ok := rc.mutation.UpdateTime(); !ok {
+		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "Room.update_time"`)}
+	}
 	if _, ok := rc.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Room.title"`)}
 	}
@@ -170,6 +249,14 @@ func (rc *RoomCreate) createSpec() (*Room, *sqlgraph.CreateSpec) {
 		_node = &Room{config: rc.config}
 		_spec = sqlgraph.NewCreateSpec(room.Table, sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt))
 	)
+	if value, ok := rc.mutation.CreateTime(); ok {
+		_spec.SetField(room.FieldCreateTime, field.TypeTime, value)
+		_node.CreateTime = value
+	}
+	if value, ok := rc.mutation.UpdateTime(); ok {
+		_spec.SetField(room.FieldUpdateTime, field.TypeTime, value)
+		_node.UpdateTime = value
+	}
 	if value, ok := rc.mutation.Title(); ok {
 		_spec.SetField(room.FieldTitle, field.TypeString, value)
 		_node.Title = value
@@ -211,15 +298,48 @@ func (rc *RoomCreate) createSpec() (*Room, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := rc.mutation.MessageIDs(); len(nodes) > 0 {
+	if nodes := rc.mutation.CategoryIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   room.MessageTable,
-			Columns: []string{room.MessageColumn},
+			Table:   room.CategoryTable,
+			Columns: []string{room.CategoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.category_rooms = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.MessagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MessagesTable,
+			Columns: room.MessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.ViewsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.ViewsTable,
+			Columns: []string{room.ViewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(view.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

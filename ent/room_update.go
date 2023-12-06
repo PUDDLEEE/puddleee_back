@@ -6,14 +6,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/PUDDLEEE/puddleee_back/ent/category"
 	"github.com/PUDDLEEE/puddleee_back/ent/message"
 	"github.com/PUDDLEEE/puddleee_back/ent/predicate"
 	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
+	"github.com/PUDDLEEE/puddleee_back/ent/view"
 )
 
 // RoomUpdate is the builder for updating Room entities.
@@ -26,6 +29,12 @@ type RoomUpdate struct {
 // Where appends a list predicates to the RoomUpdate builder.
 func (ru *RoomUpdate) Where(ps ...predicate.Room) *RoomUpdate {
 	ru.mutation.Where(ps...)
+	return ru
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (ru *RoomUpdate) SetUpdateTime(t time.Time) *RoomUpdate {
+	ru.mutation.SetUpdateTime(t)
 	return ru
 }
 
@@ -91,19 +100,53 @@ func (ru *RoomUpdate) AddRespondent(u ...*User) *RoomUpdate {
 	return ru.AddRespondentIDs(ids...)
 }
 
-// AddMessageIDs adds the "message" edge to the Message entity by IDs.
+// SetCategoryID sets the "category" edge to the Category entity by ID.
+func (ru *RoomUpdate) SetCategoryID(id int) *RoomUpdate {
+	ru.mutation.SetCategoryID(id)
+	return ru
+}
+
+// SetNillableCategoryID sets the "category" edge to the Category entity by ID if the given value is not nil.
+func (ru *RoomUpdate) SetNillableCategoryID(id *int) *RoomUpdate {
+	if id != nil {
+		ru = ru.SetCategoryID(*id)
+	}
+	return ru
+}
+
+// SetCategory sets the "category" edge to the Category entity.
+func (ru *RoomUpdate) SetCategory(c *Category) *RoomUpdate {
+	return ru.SetCategoryID(c.ID)
+}
+
+// AddMessageIDs adds the "messages" edge to the Message entity by IDs.
 func (ru *RoomUpdate) AddMessageIDs(ids ...int) *RoomUpdate {
 	ru.mutation.AddMessageIDs(ids...)
 	return ru
 }
 
-// AddMessage adds the "message" edges to the Message entity.
-func (ru *RoomUpdate) AddMessage(m ...*Message) *RoomUpdate {
+// AddMessages adds the "messages" edges to the Message entity.
+func (ru *RoomUpdate) AddMessages(m ...*Message) *RoomUpdate {
 	ids := make([]int, len(m))
 	for i := range m {
 		ids[i] = m[i].ID
 	}
 	return ru.AddMessageIDs(ids...)
+}
+
+// AddViewIDs adds the "views" edge to the View entity by IDs.
+func (ru *RoomUpdate) AddViewIDs(ids ...int) *RoomUpdate {
+	ru.mutation.AddViewIDs(ids...)
+	return ru
+}
+
+// AddViews adds the "views" edges to the View entity.
+func (ru *RoomUpdate) AddViews(v ...*View) *RoomUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return ru.AddViewIDs(ids...)
 }
 
 // Mutation returns the RoomMutation object of the builder.
@@ -138,20 +181,26 @@ func (ru *RoomUpdate) RemoveRespondent(u ...*User) *RoomUpdate {
 	return ru.RemoveRespondentIDs(ids...)
 }
 
-// ClearMessage clears all "message" edges to the Message entity.
-func (ru *RoomUpdate) ClearMessage() *RoomUpdate {
-	ru.mutation.ClearMessage()
+// ClearCategory clears the "category" edge to the Category entity.
+func (ru *RoomUpdate) ClearCategory() *RoomUpdate {
+	ru.mutation.ClearCategory()
 	return ru
 }
 
-// RemoveMessageIDs removes the "message" edge to Message entities by IDs.
+// ClearMessages clears all "messages" edges to the Message entity.
+func (ru *RoomUpdate) ClearMessages() *RoomUpdate {
+	ru.mutation.ClearMessages()
+	return ru
+}
+
+// RemoveMessageIDs removes the "messages" edge to Message entities by IDs.
 func (ru *RoomUpdate) RemoveMessageIDs(ids ...int) *RoomUpdate {
 	ru.mutation.RemoveMessageIDs(ids...)
 	return ru
 }
 
-// RemoveMessage removes "message" edges to Message entities.
-func (ru *RoomUpdate) RemoveMessage(m ...*Message) *RoomUpdate {
+// RemoveMessages removes "messages" edges to Message entities.
+func (ru *RoomUpdate) RemoveMessages(m ...*Message) *RoomUpdate {
 	ids := make([]int, len(m))
 	for i := range m {
 		ids[i] = m[i].ID
@@ -159,8 +208,30 @@ func (ru *RoomUpdate) RemoveMessage(m ...*Message) *RoomUpdate {
 	return ru.RemoveMessageIDs(ids...)
 }
 
+// ClearViews clears all "views" edges to the View entity.
+func (ru *RoomUpdate) ClearViews() *RoomUpdate {
+	ru.mutation.ClearViews()
+	return ru
+}
+
+// RemoveViewIDs removes the "views" edge to View entities by IDs.
+func (ru *RoomUpdate) RemoveViewIDs(ids ...int) *RoomUpdate {
+	ru.mutation.RemoveViewIDs(ids...)
+	return ru
+}
+
+// RemoveViews removes "views" edges to View entities.
+func (ru *RoomUpdate) RemoveViews(v ...*View) *RoomUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return ru.RemoveViewIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (ru *RoomUpdate) Save(ctx context.Context) (int, error) {
+	ru.defaults()
 	return withHooks(ctx, ru.sqlSave, ru.mutation, ru.hooks)
 }
 
@@ -186,6 +257,14 @@ func (ru *RoomUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (ru *RoomUpdate) defaults() {
+	if _, ok := ru.mutation.UpdateTime(); !ok {
+		v := room.UpdateDefaultUpdateTime()
+		ru.mutation.SetUpdateTime(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (ru *RoomUpdate) check() error {
 	if v, ok := ru.mutation.Title(); ok {
@@ -207,6 +286,9 @@ func (ru *RoomUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := ru.mutation.UpdateTime(); ok {
+		_spec.SetField(room.FieldUpdateTime, field.TypeTime, value)
 	}
 	if value, ok := ru.mutation.Title(); ok {
 		_spec.SetField(room.FieldTitle, field.TypeString, value)
@@ -288,12 +370,41 @@ func (ru *RoomUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if ru.mutation.MessageCleared() {
+	if ru.mutation.CategoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   room.MessageTable,
-			Columns: []string{room.MessageColumn},
+			Table:   room.CategoryTable,
+			Columns: []string{room.CategoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.CategoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   room.CategoryTable,
+			Columns: []string{room.CategoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ru.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MessagesTable,
+			Columns: room.MessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
@@ -301,12 +412,12 @@ func (ru *RoomUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ru.mutation.RemovedMessageIDs(); len(nodes) > 0 && !ru.mutation.MessageCleared() {
+	if nodes := ru.mutation.RemovedMessagesIDs(); len(nodes) > 0 && !ru.mutation.MessagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   room.MessageTable,
-			Columns: []string{room.MessageColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MessagesTable,
+			Columns: room.MessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
@@ -317,15 +428,60 @@ func (ru *RoomUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ru.mutation.MessageIDs(); len(nodes) > 0 {
+	if nodes := ru.mutation.MessagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   room.MessageTable,
-			Columns: []string{room.MessageColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MessagesTable,
+			Columns: room.MessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ru.mutation.ViewsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.ViewsTable,
+			Columns: []string{room.ViewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(view.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.RemovedViewsIDs(); len(nodes) > 0 && !ru.mutation.ViewsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.ViewsTable,
+			Columns: []string{room.ViewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(view.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.ViewsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.ViewsTable,
+			Columns: []string{room.ViewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(view.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -351,6 +507,12 @@ type RoomUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *RoomMutation
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (ruo *RoomUpdateOne) SetUpdateTime(t time.Time) *RoomUpdateOne {
+	ruo.mutation.SetUpdateTime(t)
+	return ruo
 }
 
 // SetTitle sets the "title" field.
@@ -415,19 +577,53 @@ func (ruo *RoomUpdateOne) AddRespondent(u ...*User) *RoomUpdateOne {
 	return ruo.AddRespondentIDs(ids...)
 }
 
-// AddMessageIDs adds the "message" edge to the Message entity by IDs.
+// SetCategoryID sets the "category" edge to the Category entity by ID.
+func (ruo *RoomUpdateOne) SetCategoryID(id int) *RoomUpdateOne {
+	ruo.mutation.SetCategoryID(id)
+	return ruo
+}
+
+// SetNillableCategoryID sets the "category" edge to the Category entity by ID if the given value is not nil.
+func (ruo *RoomUpdateOne) SetNillableCategoryID(id *int) *RoomUpdateOne {
+	if id != nil {
+		ruo = ruo.SetCategoryID(*id)
+	}
+	return ruo
+}
+
+// SetCategory sets the "category" edge to the Category entity.
+func (ruo *RoomUpdateOne) SetCategory(c *Category) *RoomUpdateOne {
+	return ruo.SetCategoryID(c.ID)
+}
+
+// AddMessageIDs adds the "messages" edge to the Message entity by IDs.
 func (ruo *RoomUpdateOne) AddMessageIDs(ids ...int) *RoomUpdateOne {
 	ruo.mutation.AddMessageIDs(ids...)
 	return ruo
 }
 
-// AddMessage adds the "message" edges to the Message entity.
-func (ruo *RoomUpdateOne) AddMessage(m ...*Message) *RoomUpdateOne {
+// AddMessages adds the "messages" edges to the Message entity.
+func (ruo *RoomUpdateOne) AddMessages(m ...*Message) *RoomUpdateOne {
 	ids := make([]int, len(m))
 	for i := range m {
 		ids[i] = m[i].ID
 	}
 	return ruo.AddMessageIDs(ids...)
+}
+
+// AddViewIDs adds the "views" edge to the View entity by IDs.
+func (ruo *RoomUpdateOne) AddViewIDs(ids ...int) *RoomUpdateOne {
+	ruo.mutation.AddViewIDs(ids...)
+	return ruo
+}
+
+// AddViews adds the "views" edges to the View entity.
+func (ruo *RoomUpdateOne) AddViews(v ...*View) *RoomUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return ruo.AddViewIDs(ids...)
 }
 
 // Mutation returns the RoomMutation object of the builder.
@@ -462,25 +658,52 @@ func (ruo *RoomUpdateOne) RemoveRespondent(u ...*User) *RoomUpdateOne {
 	return ruo.RemoveRespondentIDs(ids...)
 }
 
-// ClearMessage clears all "message" edges to the Message entity.
-func (ruo *RoomUpdateOne) ClearMessage() *RoomUpdateOne {
-	ruo.mutation.ClearMessage()
+// ClearCategory clears the "category" edge to the Category entity.
+func (ruo *RoomUpdateOne) ClearCategory() *RoomUpdateOne {
+	ruo.mutation.ClearCategory()
 	return ruo
 }
 
-// RemoveMessageIDs removes the "message" edge to Message entities by IDs.
+// ClearMessages clears all "messages" edges to the Message entity.
+func (ruo *RoomUpdateOne) ClearMessages() *RoomUpdateOne {
+	ruo.mutation.ClearMessages()
+	return ruo
+}
+
+// RemoveMessageIDs removes the "messages" edge to Message entities by IDs.
 func (ruo *RoomUpdateOne) RemoveMessageIDs(ids ...int) *RoomUpdateOne {
 	ruo.mutation.RemoveMessageIDs(ids...)
 	return ruo
 }
 
-// RemoveMessage removes "message" edges to Message entities.
-func (ruo *RoomUpdateOne) RemoveMessage(m ...*Message) *RoomUpdateOne {
+// RemoveMessages removes "messages" edges to Message entities.
+func (ruo *RoomUpdateOne) RemoveMessages(m ...*Message) *RoomUpdateOne {
 	ids := make([]int, len(m))
 	for i := range m {
 		ids[i] = m[i].ID
 	}
 	return ruo.RemoveMessageIDs(ids...)
+}
+
+// ClearViews clears all "views" edges to the View entity.
+func (ruo *RoomUpdateOne) ClearViews() *RoomUpdateOne {
+	ruo.mutation.ClearViews()
+	return ruo
+}
+
+// RemoveViewIDs removes the "views" edge to View entities by IDs.
+func (ruo *RoomUpdateOne) RemoveViewIDs(ids ...int) *RoomUpdateOne {
+	ruo.mutation.RemoveViewIDs(ids...)
+	return ruo
+}
+
+// RemoveViews removes "views" edges to View entities.
+func (ruo *RoomUpdateOne) RemoveViews(v ...*View) *RoomUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return ruo.RemoveViewIDs(ids...)
 }
 
 // Where appends a list predicates to the RoomUpdate builder.
@@ -498,6 +721,7 @@ func (ruo *RoomUpdateOne) Select(field string, fields ...string) *RoomUpdateOne 
 
 // Save executes the query and returns the updated Room entity.
 func (ruo *RoomUpdateOne) Save(ctx context.Context) (*Room, error) {
+	ruo.defaults()
 	return withHooks(ctx, ruo.sqlSave, ruo.mutation, ruo.hooks)
 }
 
@@ -520,6 +744,14 @@ func (ruo *RoomUpdateOne) Exec(ctx context.Context) error {
 func (ruo *RoomUpdateOne) ExecX(ctx context.Context) {
 	if err := ruo.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (ruo *RoomUpdateOne) defaults() {
+	if _, ok := ruo.mutation.UpdateTime(); !ok {
+		v := room.UpdateDefaultUpdateTime()
+		ruo.mutation.SetUpdateTime(v)
 	}
 }
 
@@ -561,6 +793,9 @@ func (ruo *RoomUpdateOne) sqlSave(ctx context.Context) (_node *Room, err error) 
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := ruo.mutation.UpdateTime(); ok {
+		_spec.SetField(room.FieldUpdateTime, field.TypeTime, value)
 	}
 	if value, ok := ruo.mutation.Title(); ok {
 		_spec.SetField(room.FieldTitle, field.TypeString, value)
@@ -642,12 +877,41 @@ func (ruo *RoomUpdateOne) sqlSave(ctx context.Context) (_node *Room, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if ruo.mutation.MessageCleared() {
+	if ruo.mutation.CategoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   room.MessageTable,
-			Columns: []string{room.MessageColumn},
+			Table:   room.CategoryTable,
+			Columns: []string{room.CategoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.CategoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   room.CategoryTable,
+			Columns: []string{room.CategoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ruo.mutation.MessagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MessagesTable,
+			Columns: room.MessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
@@ -655,12 +919,12 @@ func (ruo *RoomUpdateOne) sqlSave(ctx context.Context) (_node *Room, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ruo.mutation.RemovedMessageIDs(); len(nodes) > 0 && !ruo.mutation.MessageCleared() {
+	if nodes := ruo.mutation.RemovedMessagesIDs(); len(nodes) > 0 && !ruo.mutation.MessagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   room.MessageTable,
-			Columns: []string{room.MessageColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MessagesTable,
+			Columns: room.MessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
@@ -671,15 +935,60 @@ func (ruo *RoomUpdateOne) sqlSave(ctx context.Context) (_node *Room, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ruo.mutation.MessageIDs(); len(nodes) > 0 {
+	if nodes := ruo.mutation.MessagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: true,
-			Table:   room.MessageTable,
-			Columns: []string{room.MessageColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   room.MessagesTable,
+			Columns: room.MessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ruo.mutation.ViewsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.ViewsTable,
+			Columns: []string{room.ViewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(view.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.RemovedViewsIDs(); len(nodes) > 0 && !ruo.mutation.ViewsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.ViewsTable,
+			Columns: []string{room.ViewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(view.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.ViewsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   room.ViewsTable,
+			Columns: []string{room.ViewsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(view.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -41,9 +41,11 @@ type UserEdges struct {
 	OwnRooms []*Room `json:"own_rooms,omitempty"`
 	// ParticipantRooms holds the value of the participant_rooms edge.
 	ParticipantRooms []*Room `json:"participant_rooms,omitempty"`
+	// Messages holds the value of the messages edge.
+	Messages []*Message `json:"messages,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // OwnRoomsOrErr returns the OwnRooms value or an error if the edge
@@ -62,6 +64,15 @@ func (e UserEdges) ParticipantRoomsOrErr() ([]*Room, error) {
 		return e.ParticipantRooms, nil
 	}
 	return nil, &NotLoadedError{edge: "participant_rooms"}
+}
+
+// MessagesOrErr returns the Messages value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) MessagesOrErr() ([]*Message, error) {
+	if e.loadedTypes[2] {
+		return e.Messages, nil
+	}
+	return nil, &NotLoadedError{edge: "messages"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -154,6 +165,11 @@ func (u *User) QueryOwnRooms() *RoomQuery {
 // QueryParticipantRooms queries the "participant_rooms" edge of the User entity.
 func (u *User) QueryParticipantRooms() *RoomQuery {
 	return NewUserClient(u.config).QueryParticipantRooms(u)
+}
+
+// QueryMessages queries the "messages" edge of the User entity.
+func (u *User) QueryMessages() *MessageQuery {
+	return NewUserClient(u.config).QueryMessages(u)
 }
 
 // Update returns a builder for updating this User.

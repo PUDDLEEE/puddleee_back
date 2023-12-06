@@ -4,10 +4,13 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/view"
 )
 
@@ -18,6 +21,51 @@ type ViewCreate struct {
 	hooks    []Hook
 }
 
+// SetCreateTime sets the "create_time" field.
+func (vc *ViewCreate) SetCreateTime(t time.Time) *ViewCreate {
+	vc.mutation.SetCreateTime(t)
+	return vc
+}
+
+// SetNillableCreateTime sets the "create_time" field if the given value is not nil.
+func (vc *ViewCreate) SetNillableCreateTime(t *time.Time) *ViewCreate {
+	if t != nil {
+		vc.SetCreateTime(*t)
+	}
+	return vc
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (vc *ViewCreate) SetUpdateTime(t time.Time) *ViewCreate {
+	vc.mutation.SetUpdateTime(t)
+	return vc
+}
+
+// SetNillableUpdateTime sets the "update_time" field if the given value is not nil.
+func (vc *ViewCreate) SetNillableUpdateTime(t *time.Time) *ViewCreate {
+	if t != nil {
+		vc.SetUpdateTime(*t)
+	}
+	return vc
+}
+
+// SetFilepath sets the "filepath" field.
+func (vc *ViewCreate) SetFilepath(s string) *ViewCreate {
+	vc.mutation.SetFilepath(s)
+	return vc
+}
+
+// SetRoomID sets the "room" edge to the Room entity by ID.
+func (vc *ViewCreate) SetRoomID(id int) *ViewCreate {
+	vc.mutation.SetRoomID(id)
+	return vc
+}
+
+// SetRoom sets the "room" edge to the Room entity.
+func (vc *ViewCreate) SetRoom(r *Room) *ViewCreate {
+	return vc.SetRoomID(r.ID)
+}
+
 // Mutation returns the ViewMutation object of the builder.
 func (vc *ViewCreate) Mutation() *ViewMutation {
 	return vc.mutation
@@ -25,6 +73,7 @@ func (vc *ViewCreate) Mutation() *ViewMutation {
 
 // Save creates the View in the database.
 func (vc *ViewCreate) Save(ctx context.Context) (*View, error) {
+	vc.defaults()
 	return withHooks(ctx, vc.sqlSave, vc.mutation, vc.hooks)
 }
 
@@ -50,8 +99,37 @@ func (vc *ViewCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (vc *ViewCreate) defaults() {
+	if _, ok := vc.mutation.CreateTime(); !ok {
+		v := view.DefaultCreateTime()
+		vc.mutation.SetCreateTime(v)
+	}
+	if _, ok := vc.mutation.UpdateTime(); !ok {
+		v := view.DefaultUpdateTime()
+		vc.mutation.SetUpdateTime(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (vc *ViewCreate) check() error {
+	if _, ok := vc.mutation.CreateTime(); !ok {
+		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "View.create_time"`)}
+	}
+	if _, ok := vc.mutation.UpdateTime(); !ok {
+		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "View.update_time"`)}
+	}
+	if _, ok := vc.mutation.Filepath(); !ok {
+		return &ValidationError{Name: "filepath", err: errors.New(`ent: missing required field "View.filepath"`)}
+	}
+	if v, ok := vc.mutation.Filepath(); ok {
+		if err := view.FilepathValidator(v); err != nil {
+			return &ValidationError{Name: "filepath", err: fmt.Errorf(`ent: validator failed for field "View.filepath": %w`, err)}
+		}
+	}
+	if _, ok := vc.mutation.RoomID(); !ok {
+		return &ValidationError{Name: "room", err: errors.New(`ent: missing required edge "View.room"`)}
+	}
 	return nil
 }
 
@@ -78,6 +156,35 @@ func (vc *ViewCreate) createSpec() (*View, *sqlgraph.CreateSpec) {
 		_node = &View{config: vc.config}
 		_spec = sqlgraph.NewCreateSpec(view.Table, sqlgraph.NewFieldSpec(view.FieldID, field.TypeInt))
 	)
+	if value, ok := vc.mutation.CreateTime(); ok {
+		_spec.SetField(view.FieldCreateTime, field.TypeTime, value)
+		_node.CreateTime = value
+	}
+	if value, ok := vc.mutation.UpdateTime(); ok {
+		_spec.SetField(view.FieldUpdateTime, field.TypeTime, value)
+		_node.UpdateTime = value
+	}
+	if value, ok := vc.mutation.Filepath(); ok {
+		_spec.SetField(view.FieldFilepath, field.TypeString, value)
+		_node.Filepath = value
+	}
+	if nodes := vc.mutation.RoomIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   view.RoomTable,
+			Columns: []string{view.RoomColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.room_views = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -99,6 +206,7 @@ func (vcb *ViewCreateBulk) Save(ctx context.Context) ([]*View, error) {
 	for i := range vcb.builders {
 		func(i int, root context.Context) {
 			builder := vcb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ViewMutation)
 				if !ok {

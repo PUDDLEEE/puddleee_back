@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/PUDDLEEE/puddleee_back/ent/predicate"
+	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/view"
 )
 
@@ -21,6 +22,8 @@ type ViewQuery struct {
 	order      []view.OrderOption
 	inters     []Interceptor
 	predicates []predicate.View
+	withRoom   *RoomQuery
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -55,6 +58,28 @@ func (vq *ViewQuery) Unique(unique bool) *ViewQuery {
 func (vq *ViewQuery) Order(o ...view.OrderOption) *ViewQuery {
 	vq.order = append(vq.order, o...)
 	return vq
+}
+
+// QueryRoom chains the current query on the "room" edge.
+func (vq *ViewQuery) QueryRoom() *RoomQuery {
+	query := (&RoomClient{config: vq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := vq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := vq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(view.Table, view.FieldID, selector),
+			sqlgraph.To(room.Table, room.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, view.RoomTable, view.RoomColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first View entity from the query.
@@ -249,14 +274,38 @@ func (vq *ViewQuery) Clone() *ViewQuery {
 		order:      append([]view.OrderOption{}, vq.order...),
 		inters:     append([]Interceptor{}, vq.inters...),
 		predicates: append([]predicate.View{}, vq.predicates...),
+		withRoom:   vq.withRoom.Clone(),
 		// clone intermediate query.
 		sql:  vq.sql.Clone(),
 		path: vq.path,
 	}
 }
 
+// WithRoom tells the query-builder to eager-load the nodes that are connected to
+// the "room" edge. The optional arguments are used to configure the query builder of the edge.
+func (vq *ViewQuery) WithRoom(opts ...func(*RoomQuery)) *ViewQuery {
+	query := (&RoomClient{config: vq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	vq.withRoom = query
+	return vq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		CreateTime time.Time `json:"create_time,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.View.Query().
+//		GroupBy(view.FieldCreateTime).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
 func (vq *ViewQuery) GroupBy(field string, fields ...string) *ViewGroupBy {
 	vq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &ViewGroupBy{build: vq}
@@ -268,6 +317,16 @@ func (vq *ViewQuery) GroupBy(field string, fields ...string) *ViewGroupBy {
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		CreateTime time.Time `json:"create_time,omitempty"`
+//	}
+//
+//	client.View.Query().
+//		Select(view.FieldCreateTime).
+//		Scan(ctx, &v)
 func (vq *ViewQuery) Select(fields ...string) *ViewSelect {
 	vq.ctx.Fields = append(vq.ctx.Fields, fields...)
 	sbuild := &ViewSelect{ViewQuery: vq}
@@ -309,15 +368,26 @@ func (vq *ViewQuery) prepareQuery(ctx context.Context) error {
 
 func (vq *ViewQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*View, error) {
 	var (
-		nodes = []*View{}
-		_spec = vq.querySpec()
+		nodes       = []*View{}
+		withFKs     = vq.withFKs
+		_spec       = vq.querySpec()
+		loadedTypes = [1]bool{
+			vq.withRoom != nil,
+		}
 	)
+	if vq.withRoom != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, view.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*View).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &View{config: vq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -329,7 +399,46 @@ func (vq *ViewQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*View, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := vq.withRoom; query != nil {
+		if err := vq.loadRoom(ctx, query, nodes, nil,
+			func(n *View, e *Room) { n.Edges.Room = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (vq *ViewQuery) loadRoom(ctx context.Context, query *RoomQuery, nodes []*View, init func(*View), assign func(*View, *Room)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*View)
+	for i := range nodes {
+		if nodes[i].room_views == nil {
+			continue
+		}
+		fk := *nodes[i].room_views
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(room.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "room_views" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (vq *ViewQuery) sqlCount(ctx context.Context) (int, error) {

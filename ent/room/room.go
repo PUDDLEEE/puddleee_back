@@ -3,6 +3,8 @@
 package room
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 )
@@ -12,6 +14,10 @@ const (
 	Label = "room"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldCreateTime holds the string denoting the create_time field in the database.
+	FieldCreateTime = "create_time"
+	// FieldUpdateTime holds the string denoting the update_time field in the database.
+	FieldUpdateTime = "update_time"
 	// FieldTitle holds the string denoting the title field in the database.
 	FieldTitle = "title"
 	// FieldIsCompleted holds the string denoting the is_completed field in the database.
@@ -20,8 +26,12 @@ const (
 	EdgeQuestioner = "questioner"
 	// EdgeRespondent holds the string denoting the respondent edge name in mutations.
 	EdgeRespondent = "respondent"
-	// EdgeMessage holds the string denoting the message edge name in mutations.
-	EdgeMessage = "message"
+	// EdgeCategory holds the string denoting the category edge name in mutations.
+	EdgeCategory = "category"
+	// EdgeMessages holds the string denoting the messages edge name in mutations.
+	EdgeMessages = "messages"
+	// EdgeViews holds the string denoting the views edge name in mutations.
+	EdgeViews = "views"
 	// Table holds the table name of the room in the database.
 	Table = "rooms"
 	// QuestionerTable is the table that holds the questioner relation/edge.
@@ -36,18 +46,32 @@ const (
 	// RespondentInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	RespondentInverseTable = "users"
-	// MessageTable is the table that holds the message relation/edge.
-	MessageTable = "messages"
-	// MessageInverseTable is the table name for the Message entity.
+	// CategoryTable is the table that holds the category relation/edge.
+	CategoryTable = "rooms"
+	// CategoryInverseTable is the table name for the Category entity.
+	// It exists in this package in order to avoid circular dependency with the "category" package.
+	CategoryInverseTable = "categories"
+	// CategoryColumn is the table column denoting the category relation/edge.
+	CategoryColumn = "category_rooms"
+	// MessagesTable is the table that holds the messages relation/edge. The primary key declared below.
+	MessagesTable = "room_messages"
+	// MessagesInverseTable is the table name for the Message entity.
 	// It exists in this package in order to avoid circular dependency with the "message" package.
-	MessageInverseTable = "messages"
-	// MessageColumn is the table column denoting the message relation/edge.
-	MessageColumn = "message_room"
+	MessagesInverseTable = "messages"
+	// ViewsTable is the table that holds the views relation/edge.
+	ViewsTable = "views"
+	// ViewsInverseTable is the table name for the View entity.
+	// It exists in this package in order to avoid circular dependency with the "view" package.
+	ViewsInverseTable = "views"
+	// ViewsColumn is the table column denoting the views relation/edge.
+	ViewsColumn = "room_views"
 )
 
 // Columns holds all SQL columns for room fields.
 var Columns = []string{
 	FieldID,
+	FieldCreateTime,
+	FieldUpdateTime,
 	FieldTitle,
 	FieldIsCompleted,
 }
@@ -55,6 +79,7 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "rooms"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
+	"category_rooms",
 	"user_own_rooms",
 }
 
@@ -62,6 +87,9 @@ var (
 	// RespondentPrimaryKey and RespondentColumn2 are the table columns denoting the
 	// primary key for the respondent relation (M2M).
 	RespondentPrimaryKey = []string{"user_id", "room_id"}
+	// MessagesPrimaryKey and MessagesColumn2 are the table columns denoting the
+	// primary key for the messages relation (M2M).
+	MessagesPrimaryKey = []string{"room_id", "message_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -80,6 +108,12 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultCreateTime holds the default value on creation for the "create_time" field.
+	DefaultCreateTime func() time.Time
+	// DefaultUpdateTime holds the default value on creation for the "update_time" field.
+	DefaultUpdateTime func() time.Time
+	// UpdateDefaultUpdateTime holds the default value on update for the "update_time" field.
+	UpdateDefaultUpdateTime func() time.Time
 	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
 	TitleValidator func(string) error
 	// DefaultIsCompleted holds the default value on creation for the "is_completed" field.
@@ -92,6 +126,16 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByCreateTime orders the results by the create_time field.
+func ByCreateTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreateTime, opts...).ToFunc()
+}
+
+// ByUpdateTime orders the results by the update_time field.
+func ByUpdateTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdateTime, opts...).ToFunc()
 }
 
 // ByTitle orders the results by the title field.
@@ -125,17 +169,38 @@ func ByRespondent(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByMessageCount orders the results by message count.
-func ByMessageCount(opts ...sql.OrderTermOption) OrderOption {
+// ByCategoryField orders the results by category field.
+func ByCategoryField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newMessageStep(), opts...)
+		sqlgraph.OrderByNeighborTerms(s, newCategoryStep(), sql.OrderByField(field, opts...))
 	}
 }
 
-// ByMessage orders the results by message terms.
-func ByMessage(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByMessagesCount orders the results by messages count.
+func ByMessagesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newMessageStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborsCount(s, newMessagesStep(), opts...)
+	}
+}
+
+// ByMessages orders the results by messages terms.
+func ByMessages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMessagesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByViewsCount orders the results by views count.
+func ByViewsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newViewsStep(), opts...)
+	}
+}
+
+// ByViews orders the results by views terms.
+func ByViews(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newViewsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newQuestionerStep() *sqlgraph.Step {
@@ -152,10 +217,24 @@ func newRespondentStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2M, true, RespondentTable, RespondentPrimaryKey...),
 	)
 }
-func newMessageStep() *sqlgraph.Step {
+func newCategoryStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(MessageInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, true, MessageTable, MessageColumn),
+		sqlgraph.To(CategoryInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, CategoryTable, CategoryColumn),
+	)
+}
+func newMessagesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MessagesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, MessagesTable, MessagesPrimaryKey...),
+	)
+}
+func newViewsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ViewsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ViewsTable, ViewsColumn),
 	)
 }

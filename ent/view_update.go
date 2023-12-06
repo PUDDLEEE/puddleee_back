@@ -6,11 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/PUDDLEEE/puddleee_back/ent/predicate"
+	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/view"
 )
 
@@ -27,13 +29,51 @@ func (vu *ViewUpdate) Where(ps ...predicate.View) *ViewUpdate {
 	return vu
 }
 
+// SetUpdateTime sets the "update_time" field.
+func (vu *ViewUpdate) SetUpdateTime(t time.Time) *ViewUpdate {
+	vu.mutation.SetUpdateTime(t)
+	return vu
+}
+
+// SetFilepath sets the "filepath" field.
+func (vu *ViewUpdate) SetFilepath(s string) *ViewUpdate {
+	vu.mutation.SetFilepath(s)
+	return vu
+}
+
+// SetNillableFilepath sets the "filepath" field if the given value is not nil.
+func (vu *ViewUpdate) SetNillableFilepath(s *string) *ViewUpdate {
+	if s != nil {
+		vu.SetFilepath(*s)
+	}
+	return vu
+}
+
+// SetRoomID sets the "room" edge to the Room entity by ID.
+func (vu *ViewUpdate) SetRoomID(id int) *ViewUpdate {
+	vu.mutation.SetRoomID(id)
+	return vu
+}
+
+// SetRoom sets the "room" edge to the Room entity.
+func (vu *ViewUpdate) SetRoom(r *Room) *ViewUpdate {
+	return vu.SetRoomID(r.ID)
+}
+
 // Mutation returns the ViewMutation object of the builder.
 func (vu *ViewUpdate) Mutation() *ViewMutation {
 	return vu.mutation
 }
 
+// ClearRoom clears the "room" edge to the Room entity.
+func (vu *ViewUpdate) ClearRoom() *ViewUpdate {
+	vu.mutation.ClearRoom()
+	return vu
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (vu *ViewUpdate) Save(ctx context.Context) (int, error) {
+	vu.defaults()
 	return withHooks(ctx, vu.sqlSave, vu.mutation, vu.hooks)
 }
 
@@ -59,7 +99,31 @@ func (vu *ViewUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (vu *ViewUpdate) defaults() {
+	if _, ok := vu.mutation.UpdateTime(); !ok {
+		v := view.UpdateDefaultUpdateTime()
+		vu.mutation.SetUpdateTime(v)
+	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (vu *ViewUpdate) check() error {
+	if v, ok := vu.mutation.Filepath(); ok {
+		if err := view.FilepathValidator(v); err != nil {
+			return &ValidationError{Name: "filepath", err: fmt.Errorf(`ent: validator failed for field "View.filepath": %w`, err)}
+		}
+	}
+	if _, ok := vu.mutation.RoomID(); vu.mutation.RoomCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "View.room"`)
+	}
+	return nil
+}
+
 func (vu *ViewUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := vu.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(view.Table, view.Columns, sqlgraph.NewFieldSpec(view.FieldID, field.TypeInt))
 	if ps := vu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -67,6 +131,41 @@ func (vu *ViewUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := vu.mutation.UpdateTime(); ok {
+		_spec.SetField(view.FieldUpdateTime, field.TypeTime, value)
+	}
+	if value, ok := vu.mutation.Filepath(); ok {
+		_spec.SetField(view.FieldFilepath, field.TypeString, value)
+	}
+	if vu.mutation.RoomCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   view.RoomTable,
+			Columns: []string{view.RoomColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vu.mutation.RoomIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   view.RoomTable,
+			Columns: []string{view.RoomColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, vu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -88,9 +187,46 @@ type ViewUpdateOne struct {
 	mutation *ViewMutation
 }
 
+// SetUpdateTime sets the "update_time" field.
+func (vuo *ViewUpdateOne) SetUpdateTime(t time.Time) *ViewUpdateOne {
+	vuo.mutation.SetUpdateTime(t)
+	return vuo
+}
+
+// SetFilepath sets the "filepath" field.
+func (vuo *ViewUpdateOne) SetFilepath(s string) *ViewUpdateOne {
+	vuo.mutation.SetFilepath(s)
+	return vuo
+}
+
+// SetNillableFilepath sets the "filepath" field if the given value is not nil.
+func (vuo *ViewUpdateOne) SetNillableFilepath(s *string) *ViewUpdateOne {
+	if s != nil {
+		vuo.SetFilepath(*s)
+	}
+	return vuo
+}
+
+// SetRoomID sets the "room" edge to the Room entity by ID.
+func (vuo *ViewUpdateOne) SetRoomID(id int) *ViewUpdateOne {
+	vuo.mutation.SetRoomID(id)
+	return vuo
+}
+
+// SetRoom sets the "room" edge to the Room entity.
+func (vuo *ViewUpdateOne) SetRoom(r *Room) *ViewUpdateOne {
+	return vuo.SetRoomID(r.ID)
+}
+
 // Mutation returns the ViewMutation object of the builder.
 func (vuo *ViewUpdateOne) Mutation() *ViewMutation {
 	return vuo.mutation
+}
+
+// ClearRoom clears the "room" edge to the Room entity.
+func (vuo *ViewUpdateOne) ClearRoom() *ViewUpdateOne {
+	vuo.mutation.ClearRoom()
+	return vuo
 }
 
 // Where appends a list predicates to the ViewUpdate builder.
@@ -108,6 +244,7 @@ func (vuo *ViewUpdateOne) Select(field string, fields ...string) *ViewUpdateOne 
 
 // Save executes the query and returns the updated View entity.
 func (vuo *ViewUpdateOne) Save(ctx context.Context) (*View, error) {
+	vuo.defaults()
 	return withHooks(ctx, vuo.sqlSave, vuo.mutation, vuo.hooks)
 }
 
@@ -133,7 +270,31 @@ func (vuo *ViewUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (vuo *ViewUpdateOne) defaults() {
+	if _, ok := vuo.mutation.UpdateTime(); !ok {
+		v := view.UpdateDefaultUpdateTime()
+		vuo.mutation.SetUpdateTime(v)
+	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (vuo *ViewUpdateOne) check() error {
+	if v, ok := vuo.mutation.Filepath(); ok {
+		if err := view.FilepathValidator(v); err != nil {
+			return &ValidationError{Name: "filepath", err: fmt.Errorf(`ent: validator failed for field "View.filepath": %w`, err)}
+		}
+	}
+	if _, ok := vuo.mutation.RoomID(); vuo.mutation.RoomCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "View.room"`)
+	}
+	return nil
+}
+
 func (vuo *ViewUpdateOne) sqlSave(ctx context.Context) (_node *View, err error) {
+	if err := vuo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(view.Table, view.Columns, sqlgraph.NewFieldSpec(view.FieldID, field.TypeInt))
 	id, ok := vuo.mutation.ID()
 	if !ok {
@@ -158,6 +319,41 @@ func (vuo *ViewUpdateOne) sqlSave(ctx context.Context) (_node *View, err error) 
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := vuo.mutation.UpdateTime(); ok {
+		_spec.SetField(view.FieldUpdateTime, field.TypeTime, value)
+	}
+	if value, ok := vuo.mutation.Filepath(); ok {
+		_spec.SetField(view.FieldFilepath, field.TypeString, value)
+	}
+	if vuo.mutation.RoomCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   view.RoomTable,
+			Columns: []string{view.RoomColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := vuo.mutation.RoomIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   view.RoomTable,
+			Columns: []string{view.RoomColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &View{config: vuo.config}
 	_spec.Assign = _node.assignValues

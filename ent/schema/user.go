@@ -33,5 +33,6 @@ func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("own_rooms", Room.Type),
 		edge.To("participant_rooms", Room.Type),
+		edge.To("messages", Message.Type),
 	}
 }

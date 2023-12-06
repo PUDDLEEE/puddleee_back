@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/PUDDLEEE/puddleee_back/ent/message"
 	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
 )
@@ -67,6 +68,14 @@ func (uc *UserCreate) SetProfileImg(s string) *UserCreate {
 	return uc
 }
 
+// SetNillableProfileImg sets the "profile_img" field if the given value is not nil.
+func (uc *UserCreate) SetNillableProfileImg(s *string) *UserCreate {
+	if s != nil {
+		uc.SetProfileImg(*s)
+	}
+	return uc
+}
+
 // SetPassword sets the "password" field.
 func (uc *UserCreate) SetPassword(s string) *UserCreate {
 	uc.mutation.SetPassword(s)
@@ -101,6 +110,21 @@ func (uc *UserCreate) AddParticipantRooms(r ...*Room) *UserCreate {
 		ids[i] = r[i].ID
 	}
 	return uc.AddParticipantRoomIDs(ids...)
+}
+
+// AddMessageIDs adds the "messages" edge to the Message entity by IDs.
+func (uc *UserCreate) AddMessageIDs(ids ...int) *UserCreate {
+	uc.mutation.AddMessageIDs(ids...)
+	return uc
+}
+
+// AddMessages adds the "messages" edges to the Message entity.
+func (uc *UserCreate) AddMessages(m ...*Message) *UserCreate {
+	ids := make([]int, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uc.AddMessageIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -171,9 +195,6 @@ func (uc *UserCreate) check() error {
 		if err := user.EmailValidator(v); err != nil {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
-	}
-	if _, ok := uc.mutation.ProfileImg(); !ok {
-		return &ValidationError{Name: "profile_img", err: errors.New(`ent: missing required field "User.profile_img"`)}
 	}
 	if _, ok := uc.mutation.Password(); !ok {
 		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "User.password"`)}
@@ -258,6 +279,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.MessagesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MessagesTable,
+			Columns: []string{user.MessagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(message.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

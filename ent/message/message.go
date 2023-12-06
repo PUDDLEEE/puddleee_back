@@ -3,6 +3,8 @@
 package message
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 )
@@ -12,29 +14,51 @@ const (
 	Label = "message"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldCreateTime holds the string denoting the create_time field in the database.
+	FieldCreateTime = "create_time"
+	// FieldUpdateTime holds the string denoting the update_time field in the database.
+	FieldUpdateTime = "update_time"
+	// FieldPayload holds the string denoting the payload field in the database.
+	FieldPayload = "payload"
 	// EdgeRoom holds the string denoting the room edge name in mutations.
 	EdgeRoom = "room"
+	// EdgeUser holds the string denoting the user edge name in mutations.
+	EdgeUser = "user"
 	// Table holds the table name of the message in the database.
 	Table = "messages"
-	// RoomTable is the table that holds the room relation/edge.
-	RoomTable = "messages"
+	// RoomTable is the table that holds the room relation/edge. The primary key declared below.
+	RoomTable = "room_messages"
 	// RoomInverseTable is the table name for the Room entity.
 	// It exists in this package in order to avoid circular dependency with the "room" package.
 	RoomInverseTable = "rooms"
-	// RoomColumn is the table column denoting the room relation/edge.
-	RoomColumn = "message_room"
+	// UserTable is the table that holds the user relation/edge.
+	UserTable = "messages"
+	// UserInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	UserInverseTable = "users"
+	// UserColumn is the table column denoting the user relation/edge.
+	UserColumn = "user_messages"
 )
 
 // Columns holds all SQL columns for message fields.
 var Columns = []string{
 	FieldID,
+	FieldCreateTime,
+	FieldUpdateTime,
+	FieldPayload,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "messages"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"message_room",
+	"user_messages",
 }
+
+var (
+	// RoomPrimaryKey and RoomColumn2 are the table columns denoting the
+	// primary key for the room relation (M2M).
+	RoomPrimaryKey = []string{"room_id", "message_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -51,6 +75,17 @@ func ValidColumn(column string) bool {
 	return false
 }
 
+var (
+	// DefaultCreateTime holds the default value on creation for the "create_time" field.
+	DefaultCreateTime func() time.Time
+	// DefaultUpdateTime holds the default value on creation for the "update_time" field.
+	DefaultUpdateTime func() time.Time
+	// UpdateDefaultUpdateTime holds the default value on update for the "update_time" field.
+	UpdateDefaultUpdateTime func() time.Time
+	// PayloadValidator is a validator for the "payload" field. It is called by the builders before save.
+	PayloadValidator func(string) error
+)
+
 // OrderOption defines the ordering options for the Message queries.
 type OrderOption func(*sql.Selector)
 
@@ -59,16 +94,52 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByRoomField orders the results by room field.
-func ByRoomField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByCreateTime orders the results by the create_time field.
+func ByCreateTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreateTime, opts...).ToFunc()
+}
+
+// ByUpdateTime orders the results by the update_time field.
+func ByUpdateTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdateTime, opts...).ToFunc()
+}
+
+// ByPayload orders the results by the payload field.
+func ByPayload(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPayload, opts...).ToFunc()
+}
+
+// ByRoomCount orders the results by room count.
+func ByRoomCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRoomStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborsCount(s, newRoomStep(), opts...)
+	}
+}
+
+// ByRoom orders the results by room terms.
+func ByRoom(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRoomStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByUserField orders the results by user field.
+func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newRoomStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RoomInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, false, RoomTable, RoomColumn),
+		sqlgraph.Edge(sqlgraph.M2M, true, RoomTable, RoomPrimaryKey...),
+	)
+}
+func newUserStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 	)
 }

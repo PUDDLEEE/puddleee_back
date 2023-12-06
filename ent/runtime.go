@@ -5,17 +5,71 @@ package ent
 import (
 	"time"
 
+	"github.com/PUDDLEEE/puddleee_back/ent/category"
+	"github.com/PUDDLEEE/puddleee_back/ent/message"
 	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/schema"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
+	"github.com/PUDDLEEE/puddleee_back/ent/view"
 )
 
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	categoryMixin := schema.Category{}.Mixin()
+	categoryMixinFields0 := categoryMixin[0].Fields()
+	_ = categoryMixinFields0
+	categoryFields := schema.Category{}.Fields()
+	_ = categoryFields
+	// categoryDescCreateTime is the schema descriptor for create_time field.
+	categoryDescCreateTime := categoryMixinFields0[0].Descriptor()
+	// category.DefaultCreateTime holds the default value on creation for the create_time field.
+	category.DefaultCreateTime = categoryDescCreateTime.Default.(func() time.Time)
+	// categoryDescUpdateTime is the schema descriptor for update_time field.
+	categoryDescUpdateTime := categoryMixinFields0[1].Descriptor()
+	// category.DefaultUpdateTime holds the default value on creation for the update_time field.
+	category.DefaultUpdateTime = categoryDescUpdateTime.Default.(func() time.Time)
+	// category.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	category.UpdateDefaultUpdateTime = categoryDescUpdateTime.UpdateDefault.(func() time.Time)
+	// categoryDescName is the schema descriptor for name field.
+	categoryDescName := categoryFields[0].Descriptor()
+	// category.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	category.NameValidator = categoryDescName.Validators[0].(func(string) error)
+	messageMixin := schema.Message{}.Mixin()
+	messageMixinFields0 := messageMixin[0].Fields()
+	_ = messageMixinFields0
+	messageFields := schema.Message{}.Fields()
+	_ = messageFields
+	// messageDescCreateTime is the schema descriptor for create_time field.
+	messageDescCreateTime := messageMixinFields0[0].Descriptor()
+	// message.DefaultCreateTime holds the default value on creation for the create_time field.
+	message.DefaultCreateTime = messageDescCreateTime.Default.(func() time.Time)
+	// messageDescUpdateTime is the schema descriptor for update_time field.
+	messageDescUpdateTime := messageMixinFields0[1].Descriptor()
+	// message.DefaultUpdateTime holds the default value on creation for the update_time field.
+	message.DefaultUpdateTime = messageDescUpdateTime.Default.(func() time.Time)
+	// message.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	message.UpdateDefaultUpdateTime = messageDescUpdateTime.UpdateDefault.(func() time.Time)
+	// messageDescPayload is the schema descriptor for payload field.
+	messageDescPayload := messageFields[0].Descriptor()
+	// message.PayloadValidator is a validator for the "payload" field. It is called by the builders before save.
+	message.PayloadValidator = messageDescPayload.Validators[0].(func(string) error)
+	roomMixin := schema.Room{}.Mixin()
+	roomMixinFields0 := roomMixin[0].Fields()
+	_ = roomMixinFields0
 	roomFields := schema.Room{}.Fields()
 	_ = roomFields
+	// roomDescCreateTime is the schema descriptor for create_time field.
+	roomDescCreateTime := roomMixinFields0[0].Descriptor()
+	// room.DefaultCreateTime holds the default value on creation for the create_time field.
+	room.DefaultCreateTime = roomDescCreateTime.Default.(func() time.Time)
+	// roomDescUpdateTime is the schema descriptor for update_time field.
+	roomDescUpdateTime := roomMixinFields0[1].Descriptor()
+	// room.DefaultUpdateTime holds the default value on creation for the update_time field.
+	room.DefaultUpdateTime = roomDescUpdateTime.Default.(func() time.Time)
+	// room.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	room.UpdateDefaultUpdateTime = roomDescUpdateTime.UpdateDefault.(func() time.Time)
 	// roomDescTitle is the schema descriptor for title field.
 	roomDescTitle := roomFields[0].Descriptor()
 	// room.TitleValidator is a validator for the "title" field. It is called by the builders before save.
@@ -51,4 +105,23 @@ func init() {
 	userDescPassword := userFields[3].Descriptor()
 	// user.PasswordValidator is a validator for the "password" field. It is called by the builders before save.
 	user.PasswordValidator = userDescPassword.Validators[0].(func(string) error)
+	viewMixin := schema.View{}.Mixin()
+	viewMixinFields0 := viewMixin[0].Fields()
+	_ = viewMixinFields0
+	viewFields := schema.View{}.Fields()
+	_ = viewFields
+	// viewDescCreateTime is the schema descriptor for create_time field.
+	viewDescCreateTime := viewMixinFields0[0].Descriptor()
+	// view.DefaultCreateTime holds the default value on creation for the create_time field.
+	view.DefaultCreateTime = viewDescCreateTime.Default.(func() time.Time)
+	// viewDescUpdateTime is the schema descriptor for update_time field.
+	viewDescUpdateTime := viewMixinFields0[1].Descriptor()
+	// view.DefaultUpdateTime holds the default value on creation for the update_time field.
+	view.DefaultUpdateTime = viewDescUpdateTime.Default.(func() time.Time)
+	// view.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	view.UpdateDefaultUpdateTime = viewDescUpdateTime.UpdateDefault.(func() time.Time)
+	// viewDescFilepath is the schema descriptor for filepath field.
+	viewDescFilepath := viewFields[0].Descriptor()
+	// view.FilepathValidator is a validator for the "filepath" field. It is called by the builders before save.
+	view.FilepathValidator = viewDescFilepath.Validators[0].(func(string) error)
 }

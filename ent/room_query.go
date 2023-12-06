@@ -11,10 +11,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/PUDDLEEE/puddleee_back/ent/category"
 	"github.com/PUDDLEEE/puddleee_back/ent/message"
 	"github.com/PUDDLEEE/puddleee_back/ent/predicate"
 	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
+	"github.com/PUDDLEEE/puddleee_back/ent/view"
 )
 
 // RoomQuery is the builder for querying Room entities.
@@ -26,7 +28,9 @@ type RoomQuery struct {
 	predicates     []predicate.Room
 	withQuestioner *UserQuery
 	withRespondent *UserQuery
-	withMessage    *MessageQuery
+	withCategory   *CategoryQuery
+	withMessages   *MessageQuery
+	withViews      *ViewQuery
 	withFKs        bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -108,8 +112,30 @@ func (rq *RoomQuery) QueryRespondent() *UserQuery {
 	return query
 }
 
-// QueryMessage chains the current query on the "message" edge.
-func (rq *RoomQuery) QueryMessage() *MessageQuery {
+// QueryCategory chains the current query on the "category" edge.
+func (rq *RoomQuery) QueryCategory() *CategoryQuery {
+	query := (&CategoryClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(room.Table, room.FieldID, selector),
+			sqlgraph.To(category.Table, category.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, room.CategoryTable, room.CategoryColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMessages chains the current query on the "messages" edge.
+func (rq *RoomQuery) QueryMessages() *MessageQuery {
 	query := (&MessageClient{config: rq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := rq.prepareQuery(ctx); err != nil {
@@ -122,7 +148,29 @@ func (rq *RoomQuery) QueryMessage() *MessageQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(room.Table, room.FieldID, selector),
 			sqlgraph.To(message.Table, message.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, room.MessageTable, room.MessageColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, room.MessagesTable, room.MessagesPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryViews chains the current query on the "views" edge.
+func (rq *RoomQuery) QueryViews() *ViewQuery {
+	query := (&ViewClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(room.Table, room.FieldID, selector),
+			sqlgraph.To(view.Table, view.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, room.ViewsTable, room.ViewsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -324,7 +372,9 @@ func (rq *RoomQuery) Clone() *RoomQuery {
 		predicates:     append([]predicate.Room{}, rq.predicates...),
 		withQuestioner: rq.withQuestioner.Clone(),
 		withRespondent: rq.withRespondent.Clone(),
-		withMessage:    rq.withMessage.Clone(),
+		withCategory:   rq.withCategory.Clone(),
+		withMessages:   rq.withMessages.Clone(),
+		withViews:      rq.withViews.Clone(),
 		// clone intermediate query.
 		sql:  rq.sql.Clone(),
 		path: rq.path,
@@ -353,14 +403,36 @@ func (rq *RoomQuery) WithRespondent(opts ...func(*UserQuery)) *RoomQuery {
 	return rq
 }
 
-// WithMessage tells the query-builder to eager-load the nodes that are connected to
-// the "message" edge. The optional arguments are used to configure the query builder of the edge.
-func (rq *RoomQuery) WithMessage(opts ...func(*MessageQuery)) *RoomQuery {
+// WithCategory tells the query-builder to eager-load the nodes that are connected to
+// the "category" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *RoomQuery) WithCategory(opts ...func(*CategoryQuery)) *RoomQuery {
+	query := (&CategoryClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withCategory = query
+	return rq
+}
+
+// WithMessages tells the query-builder to eager-load the nodes that are connected to
+// the "messages" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *RoomQuery) WithMessages(opts ...func(*MessageQuery)) *RoomQuery {
 	query := (&MessageClient{config: rq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	rq.withMessage = query
+	rq.withMessages = query
+	return rq
+}
+
+// WithViews tells the query-builder to eager-load the nodes that are connected to
+// the "views" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *RoomQuery) WithViews(opts ...func(*ViewQuery)) *RoomQuery {
+	query := (&ViewClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withViews = query
 	return rq
 }
 
@@ -370,12 +442,12 @@ func (rq *RoomQuery) WithMessage(opts ...func(*MessageQuery)) *RoomQuery {
 // Example:
 //
 //	var v []struct {
-//		Title string `json:"title,omitempty"`
+//		CreateTime time.Time `json:"create_time,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Room.Query().
-//		GroupBy(room.FieldTitle).
+//		GroupBy(room.FieldCreateTime).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (rq *RoomQuery) GroupBy(field string, fields ...string) *RoomGroupBy {
@@ -393,11 +465,11 @@ func (rq *RoomQuery) GroupBy(field string, fields ...string) *RoomGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Title string `json:"title,omitempty"`
+//		CreateTime time.Time `json:"create_time,omitempty"`
 //	}
 //
 //	client.Room.Query().
-//		Select(room.FieldTitle).
+//		Select(room.FieldCreateTime).
 //		Scan(ctx, &v)
 func (rq *RoomQuery) Select(fields ...string) *RoomSelect {
 	rq.ctx.Fields = append(rq.ctx.Fields, fields...)
@@ -443,13 +515,15 @@ func (rq *RoomQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Room, e
 		nodes       = []*Room{}
 		withFKs     = rq.withFKs
 		_spec       = rq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [5]bool{
 			rq.withQuestioner != nil,
 			rq.withRespondent != nil,
-			rq.withMessage != nil,
+			rq.withCategory != nil,
+			rq.withMessages != nil,
+			rq.withViews != nil,
 		}
 	)
-	if rq.withQuestioner != nil {
+	if rq.withQuestioner != nil || rq.withCategory != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -486,10 +560,23 @@ func (rq *RoomQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Room, e
 			return nil, err
 		}
 	}
-	if query := rq.withMessage; query != nil {
-		if err := rq.loadMessage(ctx, query, nodes,
-			func(n *Room) { n.Edges.Message = []*Message{} },
-			func(n *Room, e *Message) { n.Edges.Message = append(n.Edges.Message, e) }); err != nil {
+	if query := rq.withCategory; query != nil {
+		if err := rq.loadCategory(ctx, query, nodes, nil,
+			func(n *Room, e *Category) { n.Edges.Category = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := rq.withMessages; query != nil {
+		if err := rq.loadMessages(ctx, query, nodes,
+			func(n *Room) { n.Edges.Messages = []*Message{} },
+			func(n *Room, e *Message) { n.Edges.Messages = append(n.Edges.Messages, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := rq.withViews; query != nil {
+		if err := rq.loadViews(ctx, query, nodes,
+			func(n *Room) { n.Edges.Views = []*View{} },
+			func(n *Room, e *View) { n.Edges.Views = append(n.Edges.Views, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -589,7 +676,100 @@ func (rq *RoomQuery) loadRespondent(ctx context.Context, query *UserQuery, nodes
 	}
 	return nil
 }
-func (rq *RoomQuery) loadMessage(ctx context.Context, query *MessageQuery, nodes []*Room, init func(*Room), assign func(*Room, *Message)) error {
+func (rq *RoomQuery) loadCategory(ctx context.Context, query *CategoryQuery, nodes []*Room, init func(*Room), assign func(*Room, *Category)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Room)
+	for i := range nodes {
+		if nodes[i].category_rooms == nil {
+			continue
+		}
+		fk := *nodes[i].category_rooms
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(category.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "category_rooms" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (rq *RoomQuery) loadMessages(ctx context.Context, query *MessageQuery, nodes []*Room, init func(*Room), assign func(*Room, *Message)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Room)
+	nids := make(map[int]map[*Room]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(room.MessagesTable)
+		s.Join(joinT).On(s.C(message.FieldID), joinT.C(room.MessagesPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(room.MessagesPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(room.MessagesPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Room]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Message](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "messages" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (rq *RoomQuery) loadViews(ctx context.Context, query *ViewQuery, nodes []*Room, init func(*Room), assign func(*Room, *View)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Room)
 	for i := range nodes {
@@ -600,21 +780,21 @@ func (rq *RoomQuery) loadMessage(ctx context.Context, query *MessageQuery, nodes
 		}
 	}
 	query.withFKs = true
-	query.Where(predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(room.MessageColumn), fks...))
+	query.Where(predicate.View(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(room.ViewsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.message_room
+		fk := n.room_views
 		if fk == nil {
-			return fmt.Errorf(`foreign-key "message_room" is nil for node %v`, n.ID)
+			return fmt.Errorf(`foreign-key "room_views" is nil for node %v`, n.ID)
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "message_room" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "room_views" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

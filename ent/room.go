@@ -5,9 +5,11 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/PUDDLEEE/puddleee_back/ent/category"
 	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
 )
@@ -17,6 +19,10 @@ type Room struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// CreateTime holds the value of the "create_time" field.
+	CreateTime time.Time `json:"create_time,omitempty"`
+	// UpdateTime holds the value of the "update_time" field.
+	UpdateTime time.Time `json:"update_time,omitempty"`
 	// Title holds the value of the "title" field.
 	Title string `json:"title,omitempty"`
 	// IsCompleted holds the value of the "is_completed" field.
@@ -24,6 +30,7 @@ type Room struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RoomQuery when eager-loading is set.
 	Edges          RoomEdges `json:"edges"`
+	category_rooms *int
 	user_own_rooms *int
 	selectValues   sql.SelectValues
 }
@@ -34,11 +41,15 @@ type RoomEdges struct {
 	Questioner *User `json:"questioner,omitempty"`
 	// Respondent holds the value of the respondent edge.
 	Respondent []*User `json:"respondent,omitempty"`
-	// Message holds the value of the message edge.
-	Message []*Message `json:"message,omitempty"`
+	// Category holds the value of the category edge.
+	Category *Category `json:"category,omitempty"`
+	// Messages holds the value of the messages edge.
+	Messages []*Message `json:"messages,omitempty"`
+	// Views holds the value of the views edge.
+	Views []*View `json:"views,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [5]bool
 }
 
 // QuestionerOrErr returns the Questioner value or an error if the edge
@@ -63,13 +74,35 @@ func (e RoomEdges) RespondentOrErr() ([]*User, error) {
 	return nil, &NotLoadedError{edge: "respondent"}
 }
 
-// MessageOrErr returns the Message value or an error if the edge
-// was not loaded in eager-loading.
-func (e RoomEdges) MessageOrErr() ([]*Message, error) {
+// CategoryOrErr returns the Category value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e RoomEdges) CategoryOrErr() (*Category, error) {
 	if e.loadedTypes[2] {
-		return e.Message, nil
+		if e.Category == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: category.Label}
+		}
+		return e.Category, nil
 	}
-	return nil, &NotLoadedError{edge: "message"}
+	return nil, &NotLoadedError{edge: "category"}
+}
+
+// MessagesOrErr returns the Messages value or an error if the edge
+// was not loaded in eager-loading.
+func (e RoomEdges) MessagesOrErr() ([]*Message, error) {
+	if e.loadedTypes[3] {
+		return e.Messages, nil
+	}
+	return nil, &NotLoadedError{edge: "messages"}
+}
+
+// ViewsOrErr returns the Views value or an error if the edge
+// was not loaded in eager-loading.
+func (e RoomEdges) ViewsOrErr() ([]*View, error) {
+	if e.loadedTypes[4] {
+		return e.Views, nil
+	}
+	return nil, &NotLoadedError{edge: "views"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -83,7 +116,11 @@ func (*Room) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case room.FieldTitle:
 			values[i] = new(sql.NullString)
-		case room.ForeignKeys[0]: // user_own_rooms
+		case room.FieldCreateTime, room.FieldUpdateTime:
+			values[i] = new(sql.NullTime)
+		case room.ForeignKeys[0]: // category_rooms
+			values[i] = new(sql.NullInt64)
+		case room.ForeignKeys[1]: // user_own_rooms
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -106,6 +143,18 @@ func (r *Room) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			r.ID = int(value.Int64)
+		case room.FieldCreateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field create_time", values[i])
+			} else if value.Valid {
+				r.CreateTime = value.Time
+			}
+		case room.FieldUpdateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field update_time", values[i])
+			} else if value.Valid {
+				r.UpdateTime = value.Time
+			}
 		case room.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
@@ -119,6 +168,13 @@ func (r *Room) assignValues(columns []string, values []any) error {
 				r.IsCompleted = value.Bool
 			}
 		case room.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field category_rooms", value)
+			} else if value.Valid {
+				r.category_rooms = new(int)
+				*r.category_rooms = int(value.Int64)
+			}
+		case room.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field user_own_rooms", value)
 			} else if value.Valid {
@@ -148,9 +204,19 @@ func (r *Room) QueryRespondent() *UserQuery {
 	return NewRoomClient(r.config).QueryRespondent(r)
 }
 
-// QueryMessage queries the "message" edge of the Room entity.
-func (r *Room) QueryMessage() *MessageQuery {
-	return NewRoomClient(r.config).QueryMessage(r)
+// QueryCategory queries the "category" edge of the Room entity.
+func (r *Room) QueryCategory() *CategoryQuery {
+	return NewRoomClient(r.config).QueryCategory(r)
+}
+
+// QueryMessages queries the "messages" edge of the Room entity.
+func (r *Room) QueryMessages() *MessageQuery {
+	return NewRoomClient(r.config).QueryMessages(r)
+}
+
+// QueryViews queries the "views" edge of the Room entity.
+func (r *Room) QueryViews() *ViewQuery {
+	return NewRoomClient(r.config).QueryViews(r)
 }
 
 // Update returns a builder for updating this Room.
@@ -176,6 +242,12 @@ func (r *Room) String() string {
 	var builder strings.Builder
 	builder.WriteString("Room(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", r.ID))
+	builder.WriteString("create_time=")
+	builder.WriteString(r.CreateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("update_time=")
+	builder.WriteString(r.UpdateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("title=")
 	builder.WriteString(r.Title)
 	builder.WriteString(", ")
