@@ -8,6 +8,46 @@ import (
 )
 
 var (
+	// MessagesColumns holds the columns for the "messages" table.
+	MessagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "message_room", Type: field.TypeInt, Nullable: true},
+	}
+	// MessagesTable holds the schema information for the "messages" table.
+	MessagesTable = &schema.Table{
+		Name:       "messages",
+		Columns:    MessagesColumns,
+		PrimaryKey: []*schema.Column{MessagesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "messages_rooms_room",
+				Columns:    []*schema.Column{MessagesColumns[1]},
+				RefColumns: []*schema.Column{RoomsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// RoomsColumns holds the columns for the "rooms" table.
+	RoomsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "is_completed", Type: field.TypeBool, Default: false},
+		{Name: "user_own_rooms", Type: field.TypeInt, Nullable: true},
+	}
+	// RoomsTable holds the schema information for the "rooms" table.
+	RoomsTable = &schema.Table{
+		Name:       "rooms",
+		Columns:    RoomsColumns,
+		PrimaryKey: []*schema.Column{RoomsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "rooms_users_own_rooms",
+				Columns:    []*schema.Column{RoomsColumns[3]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -15,6 +55,7 @@ var (
 		{Name: "update_time", Type: field.TypeTime},
 		{Name: "username", Type: field.TypeString, Unique: true},
 		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "profile_img", Type: field.TypeString},
 		{Name: "password", Type: field.TypeString},
 	}
 	// UsersTable holds the schema information for the "users" table.
@@ -23,11 +64,54 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
+	// ViewsColumns holds the columns for the "views" table.
+	ViewsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+	}
+	// ViewsTable holds the schema information for the "views" table.
+	ViewsTable = &schema.Table{
+		Name:       "views",
+		Columns:    ViewsColumns,
+		PrimaryKey: []*schema.Column{ViewsColumns[0]},
+	}
+	// UserParticipantRoomsColumns holds the columns for the "user_participant_rooms" table.
+	UserParticipantRoomsColumns = []*schema.Column{
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "room_id", Type: field.TypeInt},
+	}
+	// UserParticipantRoomsTable holds the schema information for the "user_participant_rooms" table.
+	UserParticipantRoomsTable = &schema.Table{
+		Name:       "user_participant_rooms",
+		Columns:    UserParticipantRoomsColumns,
+		PrimaryKey: []*schema.Column{UserParticipantRoomsColumns[0], UserParticipantRoomsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_participant_rooms_user_id",
+				Columns:    []*schema.Column{UserParticipantRoomsColumns[0]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "user_participant_rooms_room_id",
+				Columns:    []*schema.Column{UserParticipantRoomsColumns[1]},
+				RefColumns: []*schema.Column{RoomsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		MessagesTable,
+		RoomsTable,
 		UsersTable,
+		ViewsTable,
+		UserParticipantRoomsTable,
 	}
 )
 
 func init() {
+	MessagesTable.ForeignKeys[0].RefTable = RoomsTable
+	RoomsTable.ForeignKeys[0].RefTable = UsersTable
+	UserParticipantRoomsTable.ForeignKeys[0].RefTable = UsersTable
+	UserParticipantRoomsTable.ForeignKeys[1].RefTable = RoomsTable
 }

@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
 )
 
@@ -60,10 +61,46 @@ func (uc *UserCreate) SetEmail(s string) *UserCreate {
 	return uc
 }
 
+// SetProfileImg sets the "profile_img" field.
+func (uc *UserCreate) SetProfileImg(s string) *UserCreate {
+	uc.mutation.SetProfileImg(s)
+	return uc
+}
+
 // SetPassword sets the "password" field.
 func (uc *UserCreate) SetPassword(s string) *UserCreate {
 	uc.mutation.SetPassword(s)
 	return uc
+}
+
+// AddOwnRoomIDs adds the "own_rooms" edge to the Room entity by IDs.
+func (uc *UserCreate) AddOwnRoomIDs(ids ...int) *UserCreate {
+	uc.mutation.AddOwnRoomIDs(ids...)
+	return uc
+}
+
+// AddOwnRooms adds the "own_rooms" edges to the Room entity.
+func (uc *UserCreate) AddOwnRooms(r ...*Room) *UserCreate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uc.AddOwnRoomIDs(ids...)
+}
+
+// AddParticipantRoomIDs adds the "participant_rooms" edge to the Room entity by IDs.
+func (uc *UserCreate) AddParticipantRoomIDs(ids ...int) *UserCreate {
+	uc.mutation.AddParticipantRoomIDs(ids...)
+	return uc
+}
+
+// AddParticipantRooms adds the "participant_rooms" edges to the Room entity.
+func (uc *UserCreate) AddParticipantRooms(r ...*Room) *UserCreate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uc.AddParticipantRoomIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -135,6 +172,9 @@ func (uc *UserCreate) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
+	if _, ok := uc.mutation.ProfileImg(); !ok {
+		return &ValidationError{Name: "profile_img", err: errors.New(`ent: missing required field "User.profile_img"`)}
+	}
 	if _, ok := uc.mutation.Password(); !ok {
 		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "User.password"`)}
 	}
@@ -185,9 +225,45 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 		_node.Email = value
 	}
+	if value, ok := uc.mutation.ProfileImg(); ok {
+		_spec.SetField(user.FieldProfileImg, field.TypeString, value)
+		_node.ProfileImg = &value
+	}
 	if value, ok := uc.mutation.Password(); ok {
 		_spec.SetField(user.FieldPassword, field.TypeString, value)
 		_node.Password = value
+	}
+	if nodes := uc.mutation.OwnRoomsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnRoomsTable,
+			Columns: []string{user.OwnRoomsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ParticipantRoomsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ParticipantRoomsTable,
+			Columns: user.ParticipantRoomsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

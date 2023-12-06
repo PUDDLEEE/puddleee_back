@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/PUDDLEEE/puddleee_back/ent/predicate"
+	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
 )
 
@@ -62,6 +63,20 @@ func (uu *UserUpdate) SetNillableEmail(s *string) *UserUpdate {
 	return uu
 }
 
+// SetProfileImg sets the "profile_img" field.
+func (uu *UserUpdate) SetProfileImg(s string) *UserUpdate {
+	uu.mutation.SetProfileImg(s)
+	return uu
+}
+
+// SetNillableProfileImg sets the "profile_img" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableProfileImg(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetProfileImg(*s)
+	}
+	return uu
+}
+
 // SetPassword sets the "password" field.
 func (uu *UserUpdate) SetPassword(s string) *UserUpdate {
 	uu.mutation.SetPassword(s)
@@ -76,9 +91,81 @@ func (uu *UserUpdate) SetNillablePassword(s *string) *UserUpdate {
 	return uu
 }
 
+// AddOwnRoomIDs adds the "own_rooms" edge to the Room entity by IDs.
+func (uu *UserUpdate) AddOwnRoomIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddOwnRoomIDs(ids...)
+	return uu
+}
+
+// AddOwnRooms adds the "own_rooms" edges to the Room entity.
+func (uu *UserUpdate) AddOwnRooms(r ...*Room) *UserUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uu.AddOwnRoomIDs(ids...)
+}
+
+// AddParticipantRoomIDs adds the "participant_rooms" edge to the Room entity by IDs.
+func (uu *UserUpdate) AddParticipantRoomIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddParticipantRoomIDs(ids...)
+	return uu
+}
+
+// AddParticipantRooms adds the "participant_rooms" edges to the Room entity.
+func (uu *UserUpdate) AddParticipantRooms(r ...*Room) *UserUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uu.AddParticipantRoomIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
+}
+
+// ClearOwnRooms clears all "own_rooms" edges to the Room entity.
+func (uu *UserUpdate) ClearOwnRooms() *UserUpdate {
+	uu.mutation.ClearOwnRooms()
+	return uu
+}
+
+// RemoveOwnRoomIDs removes the "own_rooms" edge to Room entities by IDs.
+func (uu *UserUpdate) RemoveOwnRoomIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveOwnRoomIDs(ids...)
+	return uu
+}
+
+// RemoveOwnRooms removes "own_rooms" edges to Room entities.
+func (uu *UserUpdate) RemoveOwnRooms(r ...*Room) *UserUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uu.RemoveOwnRoomIDs(ids...)
+}
+
+// ClearParticipantRooms clears all "participant_rooms" edges to the Room entity.
+func (uu *UserUpdate) ClearParticipantRooms() *UserUpdate {
+	uu.mutation.ClearParticipantRooms()
+	return uu
+}
+
+// RemoveParticipantRoomIDs removes the "participant_rooms" edge to Room entities by IDs.
+func (uu *UserUpdate) RemoveParticipantRoomIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveParticipantRoomIDs(ids...)
+	return uu
+}
+
+// RemoveParticipantRooms removes "participant_rooms" edges to Room entities.
+func (uu *UserUpdate) RemoveParticipantRooms(r ...*Room) *UserUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uu.RemoveParticipantRoomIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -158,8 +245,101 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
+	if value, ok := uu.mutation.ProfileImg(); ok {
+		_spec.SetField(user.FieldProfileImg, field.TypeString, value)
+	}
 	if value, ok := uu.mutation.Password(); ok {
 		_spec.SetField(user.FieldPassword, field.TypeString, value)
+	}
+	if uu.mutation.OwnRoomsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnRoomsTable,
+			Columns: []string{user.OwnRoomsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedOwnRoomsIDs(); len(nodes) > 0 && !uu.mutation.OwnRoomsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnRoomsTable,
+			Columns: []string{user.OwnRoomsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.OwnRoomsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnRoomsTable,
+			Columns: []string{user.OwnRoomsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.ParticipantRoomsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ParticipantRoomsTable,
+			Columns: user.ParticipantRoomsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedParticipantRoomsIDs(); len(nodes) > 0 && !uu.mutation.ParticipantRoomsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ParticipantRoomsTable,
+			Columns: user.ParticipantRoomsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ParticipantRoomsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ParticipantRoomsTable,
+			Columns: user.ParticipantRoomsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -215,6 +395,20 @@ func (uuo *UserUpdateOne) SetNillableEmail(s *string) *UserUpdateOne {
 	return uuo
 }
 
+// SetProfileImg sets the "profile_img" field.
+func (uuo *UserUpdateOne) SetProfileImg(s string) *UserUpdateOne {
+	uuo.mutation.SetProfileImg(s)
+	return uuo
+}
+
+// SetNillableProfileImg sets the "profile_img" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableProfileImg(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetProfileImg(*s)
+	}
+	return uuo
+}
+
 // SetPassword sets the "password" field.
 func (uuo *UserUpdateOne) SetPassword(s string) *UserUpdateOne {
 	uuo.mutation.SetPassword(s)
@@ -229,9 +423,81 @@ func (uuo *UserUpdateOne) SetNillablePassword(s *string) *UserUpdateOne {
 	return uuo
 }
 
+// AddOwnRoomIDs adds the "own_rooms" edge to the Room entity by IDs.
+func (uuo *UserUpdateOne) AddOwnRoomIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddOwnRoomIDs(ids...)
+	return uuo
+}
+
+// AddOwnRooms adds the "own_rooms" edges to the Room entity.
+func (uuo *UserUpdateOne) AddOwnRooms(r ...*Room) *UserUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uuo.AddOwnRoomIDs(ids...)
+}
+
+// AddParticipantRoomIDs adds the "participant_rooms" edge to the Room entity by IDs.
+func (uuo *UserUpdateOne) AddParticipantRoomIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddParticipantRoomIDs(ids...)
+	return uuo
+}
+
+// AddParticipantRooms adds the "participant_rooms" edges to the Room entity.
+func (uuo *UserUpdateOne) AddParticipantRooms(r ...*Room) *UserUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uuo.AddParticipantRoomIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
+}
+
+// ClearOwnRooms clears all "own_rooms" edges to the Room entity.
+func (uuo *UserUpdateOne) ClearOwnRooms() *UserUpdateOne {
+	uuo.mutation.ClearOwnRooms()
+	return uuo
+}
+
+// RemoveOwnRoomIDs removes the "own_rooms" edge to Room entities by IDs.
+func (uuo *UserUpdateOne) RemoveOwnRoomIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveOwnRoomIDs(ids...)
+	return uuo
+}
+
+// RemoveOwnRooms removes "own_rooms" edges to Room entities.
+func (uuo *UserUpdateOne) RemoveOwnRooms(r ...*Room) *UserUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uuo.RemoveOwnRoomIDs(ids...)
+}
+
+// ClearParticipantRooms clears all "participant_rooms" edges to the Room entity.
+func (uuo *UserUpdateOne) ClearParticipantRooms() *UserUpdateOne {
+	uuo.mutation.ClearParticipantRooms()
+	return uuo
+}
+
+// RemoveParticipantRoomIDs removes the "participant_rooms" edge to Room entities by IDs.
+func (uuo *UserUpdateOne) RemoveParticipantRoomIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveParticipantRoomIDs(ids...)
+	return uuo
+}
+
+// RemoveParticipantRooms removes "participant_rooms" edges to Room entities.
+func (uuo *UserUpdateOne) RemoveParticipantRooms(r ...*Room) *UserUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uuo.RemoveParticipantRoomIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -341,8 +607,101 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
+	if value, ok := uuo.mutation.ProfileImg(); ok {
+		_spec.SetField(user.FieldProfileImg, field.TypeString, value)
+	}
 	if value, ok := uuo.mutation.Password(); ok {
 		_spec.SetField(user.FieldPassword, field.TypeString, value)
+	}
+	if uuo.mutation.OwnRoomsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnRoomsTable,
+			Columns: []string{user.OwnRoomsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedOwnRoomsIDs(); len(nodes) > 0 && !uuo.mutation.OwnRoomsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnRoomsTable,
+			Columns: []string{user.OwnRoomsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.OwnRoomsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnRoomsTable,
+			Columns: []string{user.OwnRoomsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.ParticipantRoomsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ParticipantRoomsTable,
+			Columns: user.ParticipantRoomsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedParticipantRoomsIDs(); len(nodes) > 0 && !uuo.mutation.ParticipantRoomsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ParticipantRoomsTable,
+			Columns: user.ParticipantRoomsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ParticipantRoomsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ParticipantRoomsTable,
+			Columns: user.ParticipantRoomsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(room.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &User{config: uuo.config}
 	_spec.Assign = _node.assignValues

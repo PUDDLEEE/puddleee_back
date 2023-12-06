@@ -25,9 +25,43 @@ type User struct {
 	Username string `json:"username,omitempty"`
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
+	// ProfileImg holds the value of the "profile_img" field.
+	ProfileImg *string `json:"profile_img,omitempty"`
 	// Password holds the value of the "password" field.
-	Password     string `json:"password,omitempty"`
+	Password string `json:"password,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the UserQuery when eager-loading is set.
+	Edges        UserEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// UserEdges holds the relations/edges for other nodes in the graph.
+type UserEdges struct {
+	// OwnRooms holds the value of the own_rooms edge.
+	OwnRooms []*Room `json:"own_rooms,omitempty"`
+	// ParticipantRooms holds the value of the participant_rooms edge.
+	ParticipantRooms []*Room `json:"participant_rooms,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [2]bool
+}
+
+// OwnRoomsOrErr returns the OwnRooms value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) OwnRoomsOrErr() ([]*Room, error) {
+	if e.loadedTypes[0] {
+		return e.OwnRooms, nil
+	}
+	return nil, &NotLoadedError{edge: "own_rooms"}
+}
+
+// ParticipantRoomsOrErr returns the ParticipantRooms value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ParticipantRoomsOrErr() ([]*Room, error) {
+	if e.loadedTypes[1] {
+		return e.ParticipantRooms, nil
+	}
+	return nil, &NotLoadedError{edge: "participant_rooms"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -37,7 +71,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldUsername, user.FieldEmail, user.FieldPassword:
+		case user.FieldUsername, user.FieldEmail, user.FieldProfileImg, user.FieldPassword:
 			values[i] = new(sql.NullString)
 		case user.FieldCreateTime, user.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
@@ -86,6 +120,13 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.Email = value.String
 			}
+		case user.FieldProfileImg:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field profile_img", values[i])
+			} else if value.Valid {
+				u.ProfileImg = new(string)
+				*u.ProfileImg = value.String
+			}
 		case user.FieldPassword:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field password", values[i])
@@ -103,6 +144,16 @@ func (u *User) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
+}
+
+// QueryOwnRooms queries the "own_rooms" edge of the User entity.
+func (u *User) QueryOwnRooms() *RoomQuery {
+	return NewUserClient(u.config).QueryOwnRooms(u)
+}
+
+// QueryParticipantRooms queries the "participant_rooms" edge of the User entity.
+func (u *User) QueryParticipantRooms() *RoomQuery {
+	return NewUserClient(u.config).QueryParticipantRooms(u)
 }
 
 // Update returns a builder for updating this User.
@@ -139,6 +190,11 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("email=")
 	builder.WriteString(u.Email)
+	builder.WriteString(", ")
+	if v := u.ProfileImg; v != nil {
+		builder.WriteString("profile_img=")
+		builder.WriteString(*v)
+	}
 	builder.WriteString(", ")
 	builder.WriteString("password=")
 	builder.WriteString(u.Password)
