@@ -3,6 +3,8 @@
 package ent
 
 import (
+	"time"
+
 	"github.com/PUDDLEEE/puddleee_back/ent/schema"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
 )
@@ -11,8 +13,21 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	userMixin := schema.User{}.Mixin()
+	userMixinFields0 := userMixin[0].Fields()
+	_ = userMixinFields0
 	userFields := schema.User{}.Fields()
 	_ = userFields
+	// userDescCreateTime is the schema descriptor for create_time field.
+	userDescCreateTime := userMixinFields0[0].Descriptor()
+	// user.DefaultCreateTime holds the default value on creation for the create_time field.
+	user.DefaultCreateTime = userDescCreateTime.Default.(func() time.Time)
+	// userDescUpdateTime is the schema descriptor for update_time field.
+	userDescUpdateTime := userMixinFields0[1].Descriptor()
+	// user.DefaultUpdateTime holds the default value on creation for the update_time field.
+	user.DefaultUpdateTime = userDescUpdateTime.Default.(func() time.Time)
+	// user.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	user.UpdateDefaultUpdateTime = userDescUpdateTime.UpdateDefault.(func() time.Time)
 	// userDescUsername is the schema descriptor for username field.
 	userDescUsername := userFields[0].Descriptor()
 	// user.UsernameValidator is a validator for the "username" field. It is called by the builders before save.
