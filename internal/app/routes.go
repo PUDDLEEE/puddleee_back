@@ -2,12 +2,13 @@ package app
 
 import (
 	"context"
+	"log"
+	"sync"
+
 	"github.com/PUDDLEEE/puddleee_back/internal/interceptors"
 	"github.com/gin-contrib/cors"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"log"
-	"sync"
 
 	"github.com/PUDDLEEE/puddleee_back/internal/middlewares"
 	"github.com/PUDDLEEE/puddleee_back/internal/user"
@@ -58,7 +59,7 @@ func (r *Routes) addUser(rg *gin.RouterGroup, controller user.UserController) {
 
 	updateUserInterceptors = append(updateUserInterceptors, controller.UpdateProfile)
 
-	userGroup := rg.Group("/user")
+	userGroup := rg.Group("/users")
 
 	userGroup.GET("", controller.ViewUser)
 	userGroup.GET("/:id", controller.ViewProfile)
