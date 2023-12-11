@@ -1,25 +1,128 @@
 basePath: /api/v1
 definitions:
-  dto.CreateUserDTO:
+  ent.Category:
     properties:
-      email:
+      create_time:
+        description: CreateTime holds the value of the "create_time" field.
         type: string
-      password:
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.CategoryEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the CategoryQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: integer
+      name:
+        description: Name holds the value of the "name" field.
         type: string
-      username:
+      update_time:
+        description: UpdateTime holds the value of the "update_time" field.
         type: string
     type: object
-  dto.UpdateUserDTO:
+  ent.CategoryEdges:
     properties:
-      email:
+      rooms:
+        description: Rooms holds the value of the rooms edge.
+        items:
+          $ref: '#/definitions/ent.Room'
+        type: array
+    type: object
+  ent.Message:
+    properties:
+      create_time:
+        description: CreateTime holds the value of the "create_time" field.
         type: string
-      password:
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.MessageEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the MessageQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: integer
+      payload:
+        description: Payload holds the value of the "payload" field.
         type: string
-      username:
+      update_time:
+        description: UpdateTime holds the value of the "update_time" field.
         type: string
+    type: object
+  ent.MessageEdges:
+    properties:
+      room:
+        description: Room holds the value of the room edge.
+        items:
+          $ref: '#/definitions/ent.Room'
+        type: array
+      user:
+        allOf:
+        - $ref: '#/definitions/ent.User'
+        description: User holds the value of the user edge.
+    type: object
+  ent.Room:
+    properties:
+      create_time:
+        description: CreateTime holds the value of the "create_time" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.RoomEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the RoomQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: integer
+      is_completed:
+        description: IsCompleted holds the value of the "is_completed" field.
+        type: boolean
+      title:
+        description: Title holds the value of the "title" field.
+        type: string
+      update_time:
+        description: UpdateTime holds the value of the "update_time" field.
+        type: string
+    type: object
+  ent.RoomEdges:
+    properties:
+      category:
+        allOf:
+        - $ref: '#/definitions/ent.Category'
+        description: Category holds the value of the category edge.
+      messages:
+        description: Messages holds the value of the messages edge.
+        items:
+          $ref: '#/definitions/ent.Message'
+        type: array
+      questioner:
+        allOf:
+        - $ref: '#/definitions/ent.User'
+        description: Questioner holds the value of the questioner edge.
+      respondent:
+        description: Respondent holds the value of the respondent edge.
+        items:
+          $ref: '#/definitions/ent.User'
+        type: array
+      views:
+        description: Views holds the value of the views edge.
+        items:
+          $ref: '#/definitions/ent.View'
+        type: array
     type: object
   ent.User:
     properties:
+      create_time:
+        description: CreateTime holds the value of the "create_time" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.UserEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the UserQuery when eager-loading is set.
       email:
         description: Email holds the value of the "email" field.
         type: string
@@ -29,9 +132,61 @@ definitions:
       password:
         description: Password holds the value of the "password" field.
         type: string
+      profile_img:
+        description: ProfileImg holds the value of the "profile_img" field.
+        type: string
+      update_time:
+        description: UpdateTime holds the value of the "update_time" field.
+        type: string
       username:
         description: Username holds the value of the "username" field.
         type: string
+    type: object
+  ent.UserEdges:
+    properties:
+      messages:
+        description: Messages holds the value of the messages edge.
+        items:
+          $ref: '#/definitions/ent.Message'
+        type: array
+      own_rooms:
+        description: OwnRooms holds the value of the own_rooms edge.
+        items:
+          $ref: '#/definitions/ent.Room'
+        type: array
+      participant_rooms:
+        description: ParticipantRooms holds the value of the participant_rooms edge.
+        items:
+          $ref: '#/definitions/ent.Room'
+        type: array
+    type: object
+  ent.View:
+    properties:
+      create_time:
+        description: CreateTime holds the value of the "create_time" field.
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.ViewEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the ViewQuery when eager-loading is set.
+      filepath:
+        description: Filepath holds the value of the "filepath" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: integer
+      update_time:
+        description: UpdateTime holds the value of the "update_time" field.
+        type: string
+    type: object
+  ent.ViewEdges:
+    properties:
+      room:
+        allOf:
+        - $ref: '#/definitions/ent.Room'
+        description: Room holds the value of the room edge.
     type: object
   errors.CustomError:
     properties:
@@ -47,6 +202,41 @@ definitions:
         description: StatusCode holds http response status.
         type: integer
     type: object
+  roomdto.UpdateRoomDTO:
+    properties:
+      category:
+        type: integer
+      isCompleted:
+        type: boolean
+      questioner:
+        type: integer
+      respondent:
+        items:
+          type: integer
+        type: array
+      title:
+        type: string
+    type: object
+  userdto.CreateUserDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      profileImg:
+        type: string
+      username:
+        type: string
+    type: object
+  userdto.UpdateUserDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
 host: 3.35.210.183
 info:
   contact:
@@ -57,7 +247,157 @@ info:
   title: Puddle Chat Application API
   version: "1.0"
 paths:
-  /user:
+  /rooms:
+    delete:
+      consumes:
+      - application/json
+      description: Update Room's Detail
+      parameters:
+      - description: Room ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.Room'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+      summary: Delete One Room
+      tags:
+      - rooms
+    get:
+      consumes:
+      - application/json
+      description: View Rooms List
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ent.Room'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+      summary: View Rooms
+      tags:
+      - rooms
+    patch:
+      consumes:
+      - application/json
+      description: Update Room's Detail
+      parameters:
+      - description: Room ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Room Info
+        in: body
+        name: UpdateRoomDTO
+        required: true
+        schema:
+          $ref: '#/definitions/roomdto.UpdateRoomDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.Room'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+      summary: Update Room's Detail
+      tags:
+      - rooms
+    post:
+      consumes:
+      - application/json
+      description: Create Room
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.Room'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+      summary: Create Room
+      tags:
+      - rooms
+  /rooms/:id:
+    get:
+      consumes:
+      - application/json
+      description: View Specific Room's Detail
+      parameters:
+      - description: Room ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.Room'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+      summary: View Specific Room's Detail
+      tags:
+      - rooms
+  /users:
     post:
       consumes:
       - application/json
@@ -69,7 +409,7 @@ paths:
         name: createUserDTO
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateUserDTO'
+          $ref: '#/definitions/userdto.CreateUserDTO'
       produces:
       - application/json
       responses:
@@ -92,7 +432,7 @@ paths:
       summary: Creating user
       tags:
       - users
-  /user/{id}:
+  /users/{id}:
     delete:
       consumes:
       - application/json
@@ -164,7 +504,7 @@ paths:
         name: UpdateUserDTO
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateUserDTO'
+          $ref: '#/definitions/userdto.UpdateUserDTO'
       produces:
       - application/json
       responses:

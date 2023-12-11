@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/PUDDLEEE/puddleee_back/internal/room"
 	"log"
 	"sync"
 
@@ -35,8 +36,10 @@ func (app *Application) setRoutes() {
 	routes.Router.Use(cors.Default())
 	v1 := routes.Router.Group("/api/v1")
 	userController := user.InitializeController(context.Background(), app.Client)
+	roomController := room.InitializeController(context.Background(), app.Client)
 	routes.addSwagger(v1)
 	routes.addUser(v1, userController)
+	routes.addRoom(v1, roomController)
 }
 
 func (r *Routes) addSwagger(rg *gin.RouterGroup) {
@@ -44,7 +47,7 @@ func (r *Routes) addSwagger(rg *gin.RouterGroup) {
 	swaggerGroup.GET("/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
 
-func (r *Routes) addUser(rg *gin.RouterGroup, controller user.UserController) {
+func (r *Routes) addUser(rg *gin.RouterGroup, controller *user.UserController) {
 
 	createUserInterceptors := []gin.HandlerFunc{
 		interceptors.CreateUserInterceptor(),
@@ -70,4 +73,14 @@ func (r *Routes) addUser(rg *gin.RouterGroup, controller user.UserController) {
 	userGroup.PATCH("/:id", updateUserInterceptors...)
 
 	userGroup.DELETE("/:id", controller.DeleteProfile)
+}
+
+func (r *Routes) addRoom(rg *gin.RouterGroup, controller *room.RoomController) {
+	roomGroup := rg.Group("/rooms")
+
+	roomGroup.GET("", controller.ViewRooms)
+	roomGroup.GET("/:id", controller.ViewOneRoom)
+	roomGroup.POST("", controller.CreateRoom)
+	roomGroup.DELETE("/:id", controller.DeleteRoom)
+	roomGroup.PATCH("/:id", controller.UpdateRoomInfo)
 }

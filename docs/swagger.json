@@ -13,7 +13,233 @@
     "host": "3.35.210.183",
     "basePath": "/api/v1",
     "paths": {
-        "/user": {
+        "/rooms": {
+            "get": {
+                "description": "View Rooms List",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "View Rooms",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ent.Room"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.CustomError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create Room",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "Create Room",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ent.Room"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.CustomError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.CustomError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.CustomError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Update Room's Detail",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "Delete One Room",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Room ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ent.Room"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.CustomError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.CustomError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.CustomError"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update Room's Detail",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "Update Room's Detail",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Room ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Room Info",
+                        "name": "UpdateRoomDTO",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/roomdto.UpdateRoomDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ent.Room"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.CustomError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.CustomError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.CustomError"
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/:id": {
+            "get": {
+                "description": "View Specific Room's Detail",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "View Specific Room's Detail",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Room ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ent.Room"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.CustomError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.CustomError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.CustomError"
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
             "post": {
                 "description": "create user. this is testing purpose, not actual business logic. Actual Sign Up Logic is in /auth/signup.",
                 "consumes": [
@@ -33,7 +259,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateUserDTO"
+                            "$ref": "#/definitions/userdto.CreateUserDTO"
                         }
                     }
                 ],
@@ -65,7 +291,7 @@
                 }
             }
         },
-        "/user/{id}": {
+        "/users/{id}": {
             "get": {
                 "description": "view one user's profile",
                 "consumes": [
@@ -176,7 +402,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateUserDTO"
+                            "$ref": "#/definitions/userdto.UpdateUserDTO"
                         }
                     }
                 ],
@@ -204,37 +430,186 @@
         }
     },
     "definitions": {
-        "dto.CreateUserDTO": {
+        "ent.Category": {
             "type": "object",
             "properties": {
-                "email": {
+                "create_time": {
+                    "description": "CreateTime holds the value of the \"create_time\" field.",
                     "type": "string"
                 },
-                "password": {
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the CategoryQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.CategoryEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Name holds the value of the \"name\" field.",
                     "type": "string"
                 },
-                "username": {
+                "update_time": {
+                    "description": "UpdateTime holds the value of the \"update_time\" field.",
                     "type": "string"
                 }
             }
         },
-        "dto.UpdateUserDTO": {
+        "ent.CategoryEdges": {
             "type": "object",
             "properties": {
-                "email": {
+                "rooms": {
+                    "description": "Rooms holds the value of the rooms edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Room"
+                    }
+                }
+            }
+        },
+        "ent.Message": {
+            "type": "object",
+            "properties": {
+                "create_time": {
+                    "description": "CreateTime holds the value of the \"create_time\" field.",
                     "type": "string"
                 },
-                "password": {
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the MessageQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.MessageEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "payload": {
+                    "description": "Payload holds the value of the \"payload\" field.",
                     "type": "string"
                 },
-                "username": {
+                "update_time": {
+                    "description": "UpdateTime holds the value of the \"update_time\" field.",
                     "type": "string"
+                }
+            }
+        },
+        "ent.MessageEdges": {
+            "type": "object",
+            "properties": {
+                "room": {
+                    "description": "Room holds the value of the room edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Room"
+                    }
+                },
+                "user": {
+                    "description": "User holds the value of the user edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.User"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.Room": {
+            "type": "object",
+            "properties": {
+                "create_time": {
+                    "description": "CreateTime holds the value of the \"create_time\" field.",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the RoomQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.RoomEdges"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "is_completed": {
+                    "description": "IsCompleted holds the value of the \"is_completed\" field.",
+                    "type": "boolean"
+                },
+                "title": {
+                    "description": "Title holds the value of the \"title\" field.",
+                    "type": "string"
+                },
+                "update_time": {
+                    "description": "UpdateTime holds the value of the \"update_time\" field.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.RoomEdges": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "description": "Category holds the value of the category edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Category"
+                        }
+                    ]
+                },
+                "messages": {
+                    "description": "Messages holds the value of the messages edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Message"
+                    }
+                },
+                "questioner": {
+                    "description": "Questioner holds the value of the questioner edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.User"
+                        }
+                    ]
+                },
+                "respondent": {
+                    "description": "Respondent holds the value of the respondent edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.User"
+                    }
+                },
+                "views": {
+                    "description": "Views holds the value of the views edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.View"
+                    }
                 }
             }
         },
         "ent.User": {
             "type": "object",
             "properties": {
+                "create_time": {
+                    "description": "CreateTime holds the value of the \"create_time\" field.",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the UserQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.UserEdges"
+                        }
+                    ]
+                },
                 "email": {
                     "description": "Email holds the value of the \"email\" field.",
                     "type": "string"
@@ -247,9 +622,85 @@
                     "description": "Password holds the value of the \"password\" field.",
                     "type": "string"
                 },
+                "profile_img": {
+                    "description": "ProfileImg holds the value of the \"profile_img\" field.",
+                    "type": "string"
+                },
+                "update_time": {
+                    "description": "UpdateTime holds the value of the \"update_time\" field.",
+                    "type": "string"
+                },
                 "username": {
                     "description": "Username holds the value of the \"username\" field.",
                     "type": "string"
+                }
+            }
+        },
+        "ent.UserEdges": {
+            "type": "object",
+            "properties": {
+                "messages": {
+                    "description": "Messages holds the value of the messages edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Message"
+                    }
+                },
+                "own_rooms": {
+                    "description": "OwnRooms holds the value of the own_rooms edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Room"
+                    }
+                },
+                "participant_rooms": {
+                    "description": "ParticipantRooms holds the value of the participant_rooms edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.Room"
+                    }
+                }
+            }
+        },
+        "ent.View": {
+            "type": "object",
+            "properties": {
+                "create_time": {
+                    "description": "CreateTime holds the value of the \"create_time\" field.",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ViewQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ViewEdges"
+                        }
+                    ]
+                },
+                "filepath": {
+                    "description": "Filepath holds the value of the \"filepath\" field.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "update_time": {
+                    "description": "UpdateTime holds the value of the \"update_time\" field.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.ViewEdges": {
+            "type": "object",
+            "properties": {
+                "room": {
+                    "description": "Room holds the value of the room edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Room"
+                        }
+                    ]
                 }
             }
         },
@@ -270,6 +721,60 @@
                 "status_code": {
                     "description": "StatusCode holds http response status.",
                     "type": "integer"
+                }
+            }
+        },
+        "roomdto.UpdateRoomDTO": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "integer"
+                },
+                "isCompleted": {
+                    "type": "boolean"
+                },
+                "questioner": {
+                    "type": "integer"
+                },
+                "respondent": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "userdto.CreateUserDTO": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "profileImg": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "userdto.UpdateUserDTO": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         }

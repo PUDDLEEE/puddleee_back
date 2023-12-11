@@ -9,7 +9,7 @@ import (
 func CreateUserInterceptor() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
-		var requestBody dto.CreateUserDTO
+		var requestBody userdto.CreateUserDTO
 
 		err := ctx.ShouldBind(&requestBody)
 		if err != nil {

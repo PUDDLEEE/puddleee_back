@@ -3,15 +3,15 @@ package user
 import (
 	"context"
 	"errors"
+	userdto "github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 
 	"github.com/PUDDLEEE/puddleee_back/ent"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
-	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 )
 
 type UserRepository struct{}
 
-func (u *UserRepository) Create(ctx context.Context, client *ent.Client, dto dto.CreateUserDTO) (*ent.User, error) {
+func (u *UserRepository) Create(ctx context.Context, client *ent.Client, dto userdto.CreateUserDTO) (*ent.User, error) {
 	newUser, err := client.User.Create().
 		SetUsername(dto.Username).
 		SetEmail(dto.Email).
@@ -34,7 +34,7 @@ func (u *UserRepository) FindOneById(ctx context.Context, client *ent.Client, id
 	return existedUser, nil
 }
 
-func (u *UserRepository) Update(ctx context.Context, client *ent.Client, id int, dto dto.UpdateUserDTO) (*ent.User, error) {
+func (u *UserRepository) Update(ctx context.Context, client *ent.Client, id int, dto userdto.UpdateUserDTO) (*ent.User, error) {
 	if dto.Username == nil && dto.Email == nil && dto.Password == nil {
 		err := errors.New("at least one field should contain data")
 		return nil, err
