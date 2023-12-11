@@ -1,0 +1,233 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>jwtAuth: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/PUDDLEEE/puddleee_back/internal/jwtAuth/service.go (81.8%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package jwtAuth
+
+import (
+        "github.com/PUDDLEEE/puddleee_back/internal/errors"
+        "github.com/golang-jwt/jwt/v5"
+        "time"
+)
+
+type JwtAuthService struct {
+        secretKey string
+}
+
+func (a *JwtAuthService) CreateAccessToken(claims AuthTokenClaims) (*string, error) <span class="cov8" title="1">{
+        claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(2 * time.Hour))
+        claims.IssuedAt = jwt.NewNumericDate(time.Now())
+        claims.NotBefore = jwt.NewNumericDate(time.Now())
+        accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+        token, err := accessToken.SignedString([]byte(a.secretKey))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return &amp;token, nil</span>
+}
+
+func (a *JwtAuthService) CreateRefreshToken(claims AuthTokenClaims) (*string, error) <span class="cov8" title="1">{
+        claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(24 * time.Hour))
+        claims.IssuedAt = jwt.NewNumericDate(time.Now())
+        claims.NotBefore = jwt.NewNumericDate(time.Now())
+        refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+        token, err := refreshToken.SignedString([]byte(a.secretKey))
+
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;token, nil</span>
+}
+
+func (a *JwtAuthService) ReassignAccessToken(accessToken string, refreshToken string) (*string, error) <span class="cov8" title="1">{
+        ok, err := a.VerifyRefreshToken(refreshToken)
+        if err != nil || !ok </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">parsedAccessToken, err := a.ParseAccessToken(accessToken)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">parsedRefreshToken, err := a.ParseRefreshToken(refreshToken)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">translatedAccessToken, ok := parsedAccessToken.Claims.(*AuthTokenClaims)
+        if !ok </span><span class="cov0" title="0">{
+                internalError := errors.INTERNAL_ERROR
+                internalError.Msg = "internal server error while translate Access Token"
+                return nil, internalError
+        }</span>
+        <span class="cov8" title="1">translatedRefreshToken, ok := parsedRefreshToken.Claims.(*AuthTokenClaims)
+        if !ok </span><span class="cov0" title="0">{
+                internalError := errors.INTERNAL_ERROR
+                internalError.Msg = "internal server error while translate Refresh Token"
+                return nil, internalError
+        }</span>
+
+        <span class="cov8" title="1">if translatedAccessToken.ID != translatedRefreshToken.ID </span><span class="cov8" title="1">{
+                notAuthorizedError := errors.NOT_AUTHORIZED
+                notAuthorizedError.Msg = "You're trying reassign access token with invalid refresh token which is not yours."
+                return nil, notAuthorizedError
+        }</span>
+        <span class="cov8" title="1">newAccessToken, err := a.CreateAccessToken(*translatedAccessToken)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return newAccessToken, nil</span>
+}
+
+func (a *JwtAuthService) ParseAccessToken(accessToken string) (*jwt.Token, error) <span class="cov8" title="1">{
+        parsedAccessToken, err := jwt.ParseWithClaims(accessToken, &amp;AuthTokenClaims{}, func(token *jwt.Token) (interface{}, error) </span><span class="cov8" title="1">{
+                return []byte(a.secretKey), nil
+        }</span>)
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return parsedAccessToken, nil</span>
+}
+
+func (a *JwtAuthService) ParseRefreshToken(accessToken string) (*jwt.Token, error) <span class="cov8" title="1">{
+        parsedRefreshToken, err := jwt.ParseWithClaims(accessToken, &amp;AuthTokenClaims{}, func(token *jwt.Token) (interface{}, error) </span><span class="cov8" title="1">{
+                return []byte(a.secretKey), nil
+        }</span>)
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return parsedRefreshToken, nil</span>
+}
+
+func (a *JwtAuthService) VerifyAccessToken(accessToken string) (bool, error) <span class="cov8" title="1">{
+        token, err := a.ParseAccessToken(accessToken)
+        if err != nil </span><span class="cov8" title="1">{
+                return false, err
+        }</span>
+
+        <span class="cov8" title="1">if _, ok := token.Claims.(*AuthTokenClaims); ok </span><span class="cov8" title="1">{
+                return true, nil
+        }</span>
+
+        <span class="cov0" title="0">return false, err</span>
+}
+
+func (a *JwtAuthService) VerifyRefreshToken(refreshToken string) (bool, error) <span class="cov8" title="1">{
+        token, err := a.ParseAccessToken(refreshToken)
+        if err != nil </span><span class="cov8" title="1">{
+                return false, err
+        }</span>
+
+        <span class="cov8" title="1">if _, ok := token.Claims.(*AuthTokenClaims); ok </span><span class="cov8" title="1">{
+                return true, nil
+        }</span>
+        <span class="cov0" title="0">return false, err</span>
+}
+
+func NewJwtAuthService(secretKey string) *JwtAuthService <span class="cov8" title="1">{
+        return &amp;JwtAuthService{secretKey: secretKey}
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
