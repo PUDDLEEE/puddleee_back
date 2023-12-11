@@ -12,7 +12,11 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/PUDDLEEE/puddleee_back/ent/category"
+	"github.com/PUDDLEEE/puddleee_back/ent/message"
+	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
+	"github.com/PUDDLEEE/puddleee_back/ent/view"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -73,7 +77,11 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			user.Table: user.ValidColumn,
+			category.Table: category.ValidColumn,
+			message.Table:  message.ValidColumn,
+			room.Table:     room.ValidColumn,
+			user.Table:     user.ValidColumn,
+			view.Table:     view.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

@@ -26,16 +26,16 @@ type UserController struct {
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			createUserDTO	body		dto.CreateUserDTO	true	"Create User Info"
+//	@Param			createUserDTO	body		userdto.CreateUserDTO	true	"Create User Info"
 //	@Success		200				{object}	ent.User
 //	@Failure		400				{object}	errors.CustomError
 //	@Failure		404				{object}	errors.CustomError
 //	@Failure		500				{object}	errors.CustomError
-//	@Router			/user [post]
+//	@Router			/users [post]
 func (c *UserController) CreateUser(ctx *gin.Context) {
 	body := ctx.Value("body")
 	if body != nil {
-		requestBody := body.(dto.CreateUserDTO)
+		requestBody := body.(userdto.CreateUserDTO)
 		user, err := c.userService.CreateUser(requestBody)
 		if err != nil {
 			switch {
@@ -69,7 +69,7 @@ func (c *UserController) ViewUser(ctx *gin.Context) {
 //	@Success		200	{object}	ent.User
 //	@Failure		400	{object}	errors.CustomError
 //	@Failure		404	{object}	errors.CustomError
-//	@Router			/user/{id} [get]
+//	@Router			/users/{id} [get]
 func (c *UserController) ViewProfile(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -95,12 +95,12 @@ func (c *UserController) ViewProfile(ctx *gin.Context) {
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id				path		int					true	"User ID"
-//	@Param			UpdateUserDTO	body		dto.UpdateUserDTO	true	"Update User Info"
+//	@Param			id				path		int						true	"User ID"
+//	@Param			UpdateUserDTO	body		userdto.UpdateUserDTO	true	"Update User Info"
 //	@Success		200				{object}	ent.User
 //	@Failure		400				{object}	errors.CustomError
 //	@Failure		500				{object}	errors.CustomError
-//	@Router			/user/{id} [patch]
+//	@Router			/users/{id} [patch]
 func (c *UserController) UpdateProfile(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -111,7 +111,7 @@ func (c *UserController) UpdateProfile(ctx *gin.Context) {
 	}
 	body := ctx.Value("body")
 	if body != nil {
-		requestBody := body.(dto.UpdateUserDTO)
+		requestBody := body.(userdto.UpdateUserDTO)
 		user, err := c.userService.UpdateUser(id, requestBody)
 		if err != nil {
 			internalError := errors.INTERNAL_ERROR
@@ -134,7 +134,7 @@ func (c *UserController) UpdateProfile(ctx *gin.Context) {
 //	@Success		200	{object}	ent.User
 //	@Failure		400	{object}	errors.CustomError
 //	@Failure		500	{object}	errors.CustomError
-//	@Router			/user/{id} [delete]
+//	@Router			/users/{id} [delete]
 func (c *UserController) DeleteProfile(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {

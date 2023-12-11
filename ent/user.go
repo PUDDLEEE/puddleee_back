@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -16,24 +17,75 @@ type User struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// CreateTime holds the value of the "create_time" field.
+	CreateTime time.Time `json:"create_time,omitempty"`
+	// UpdateTime holds the value of the "update_time" field.
+	UpdateTime time.Time `json:"update_time,omitempty"`
 	// Username holds the value of the "username" field.
 	Username string `json:"username,omitempty"`
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
+	// ProfileImg holds the value of the "profile_img" field.
+	ProfileImg *string `json:"profile_img,omitempty"`
 	// Password holds the value of the "password" field.
-	Password     string `json:"password,omitempty"`
+	Password string `json:"password,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the UserQuery when eager-loading is set.
+	Edges        UserEdges `json:"edges"`
 	selectValues sql.SelectValues
 }
 
-// scanValues returns the interfaces for scanning values from sql.Rows.
+// UserEdges holds the relations/edges for other nodes in the graph.
+type UserEdges struct {
+	// OwnRooms holds the value of the own_rooms edge.
+	OwnRooms []*Room `json:"own_rooms,omitempty"`
+	// ParticipantRooms holds the value of the participant_rooms edge.
+	ParticipantRooms []*Room `json:"participant_rooms,omitempty"`
+	// Messages holds the value of the messages edge.
+	Messages []*Message `json:"messages,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [3]bool
+}
+
+// OwnRoomsOrErr returns the OwnRooms value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) OwnRoomsOrErr() ([]*Room, error) {
+	if e.loadedTypes[0] {
+		return e.OwnRooms, nil
+	}
+	return nil, &NotLoadedError{edge: "own_rooms"}
+}
+
+// ParticipantRoomsOrErr returns the ParticipantRooms value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ParticipantRoomsOrErr() ([]*Room, error) {
+	if e.loadedTypes[1] {
+		return e.ParticipantRooms, nil
+	}
+	return nil, &NotLoadedError{edge: "participant_rooms"}
+}
+
+// MessagesOrErr returns the Messages value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) MessagesOrErr() ([]*Message, error) {
+	if e.loadedTypes[2] {
+		return e.Messages, nil
+	}
+	return nil, &NotLoadedError{edge: "messages"}
+}
+
+// scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
 		case user.FieldID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldUsername, user.FieldEmail, user.FieldPassword:
+		case user.FieldUsername, user.FieldEmail, user.FieldProfileImg, user.FieldPassword:
 			values[i] = new(sql.NullString)
+		case user.FieldCreateTime, user.FieldUpdateTime:
+			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -55,6 +107,18 @@ func (u *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			u.ID = int(value.Int64)
+		case user.FieldCreateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field create_time", values[i])
+			} else if value.Valid {
+				u.CreateTime = value.Time
+			}
+		case user.FieldUpdateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field update_time", values[i])
+			} else if value.Valid {
+				u.UpdateTime = value.Time
+			}
 		case user.FieldUsername:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field username", values[i])
@@ -66,6 +130,13 @@ func (u *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field email", values[i])
 			} else if value.Valid {
 				u.Email = value.String
+			}
+		case user.FieldProfileImg:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field profile_img", values[i])
+			} else if value.Valid {
+				u.ProfileImg = new(string)
+				*u.ProfileImg = value.String
 			}
 		case user.FieldPassword:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -84,6 +155,21 @@ func (u *User) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
+}
+
+// QueryOwnRooms queries the "own_rooms" edge of the User entity.
+func (u *User) QueryOwnRooms() *RoomQuery {
+	return NewUserClient(u.config).QueryOwnRooms(u)
+}
+
+// QueryParticipantRooms queries the "participant_rooms" edge of the User entity.
+func (u *User) QueryParticipantRooms() *RoomQuery {
+	return NewUserClient(u.config).QueryParticipantRooms(u)
+}
+
+// QueryMessages queries the "messages" edge of the User entity.
+func (u *User) QueryMessages() *MessageQuery {
+	return NewUserClient(u.config).QueryMessages(u)
 }
 
 // Update returns a builder for updating this User.
@@ -109,11 +195,22 @@ func (u *User) String() string {
 	var builder strings.Builder
 	builder.WriteString("User(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", u.ID))
+	builder.WriteString("create_time=")
+	builder.WriteString(u.CreateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("update_time=")
+	builder.WriteString(u.UpdateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("username=")
 	builder.WriteString(u.Username)
 	builder.WriteString(", ")
 	builder.WriteString("email=")
 	builder.WriteString(u.Email)
+	builder.WriteString(", ")
+	if v := u.ProfileImg; v != nil {
+		builder.WriteString("profile_img=")
+		builder.WriteString(*v)
+	}
 	builder.WriteString(", ")
 	builder.WriteString("password=")
 	builder.WriteString(u.Password)

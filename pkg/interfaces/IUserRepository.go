@@ -8,9 +8,9 @@ import (
 )
 
 type IUserRepository interface {
-	Create(context.Context, *ent.Client, dto.CreateUserDTO) (*ent.User, error)
+	Create(context.Context, *ent.Client, userdto.CreateUserDTO) (*ent.User, error)
 	FindOneById(context.Context, *ent.Client, int) (*ent.User, error)
-	Update(context.Context, *ent.Client, int, dto.UpdateUserDTO) (*ent.User, error)
+	Update(context.Context, *ent.Client, int, userdto.UpdateUserDTO) (*ent.User, error)
 	Delete(context.Context, *ent.Client, int) error
 }
 

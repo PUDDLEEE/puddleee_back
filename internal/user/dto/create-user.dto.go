@@ -1,11 +1,12 @@
-package dto
+package userdto
 
 import "net/mail"
 
 type CreateUserDTO struct {
-	Username string
-	Email    string
-	Password string
+	Username   string
+	Email      string
+	ProfileImg *string
+	Password   string
 }
 
 func (c *CreateUserDTO) Validate() error {

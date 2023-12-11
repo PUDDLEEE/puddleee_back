@@ -6,9 +6,9 @@ import (
 )
 
 type IUserService interface {
-	CreateUser(dto.CreateUserDTO) (*ent.User, error)
+	CreateUser(userdto.CreateUserDTO) (*ent.User, error)
 	FindOneUser(int) (*ent.User, error)
-	UpdateUser(int, dto.UpdateUserDTO) (*ent.User, error)
+	UpdateUser(int, userdto.UpdateUserDTO) (*ent.User, error)
 	DeleteUser(int) error
 }
 

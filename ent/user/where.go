@@ -3,7 +3,10 @@
 package user
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/PUDDLEEE/puddleee_back/ent/predicate"
 )
 
@@ -52,6 +55,16 @@ func IDLTE(id int) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldID, id))
 }
 
+// CreateTime applies equality check predicate on the "create_time" field. It's identical to CreateTimeEQ.
+func CreateTime(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldCreateTime, v))
+}
+
+// UpdateTime applies equality check predicate on the "update_time" field. It's identical to UpdateTimeEQ.
+func UpdateTime(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldUpdateTime, v))
+}
+
 // Username applies equality check predicate on the "username" field. It's identical to UsernameEQ.
 func Username(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldUsername, v))
@@ -62,9 +75,94 @@ func Email(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldEmail, v))
 }
 
+// ProfileImg applies equality check predicate on the "profile_img" field. It's identical to ProfileImgEQ.
+func ProfileImg(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldProfileImg, v))
+}
+
 // Password applies equality check predicate on the "password" field. It's identical to PasswordEQ.
 func Password(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldPassword, v))
+}
+
+// CreateTimeEQ applies the EQ predicate on the "create_time" field.
+func CreateTimeEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldCreateTime, v))
+}
+
+// CreateTimeNEQ applies the NEQ predicate on the "create_time" field.
+func CreateTimeNEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldCreateTime, v))
+}
+
+// CreateTimeIn applies the In predicate on the "create_time" field.
+func CreateTimeIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldIn(FieldCreateTime, vs...))
+}
+
+// CreateTimeNotIn applies the NotIn predicate on the "create_time" field.
+func CreateTimeNotIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldCreateTime, vs...))
+}
+
+// CreateTimeGT applies the GT predicate on the "create_time" field.
+func CreateTimeGT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGT(FieldCreateTime, v))
+}
+
+// CreateTimeGTE applies the GTE predicate on the "create_time" field.
+func CreateTimeGTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldCreateTime, v))
+}
+
+// CreateTimeLT applies the LT predicate on the "create_time" field.
+func CreateTimeLT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLT(FieldCreateTime, v))
+}
+
+// CreateTimeLTE applies the LTE predicate on the "create_time" field.
+func CreateTimeLTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldCreateTime, v))
+}
+
+// UpdateTimeEQ applies the EQ predicate on the "update_time" field.
+func UpdateTimeEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldUpdateTime, v))
+}
+
+// UpdateTimeNEQ applies the NEQ predicate on the "update_time" field.
+func UpdateTimeNEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldUpdateTime, v))
+}
+
+// UpdateTimeIn applies the In predicate on the "update_time" field.
+func UpdateTimeIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldIn(FieldUpdateTime, vs...))
+}
+
+// UpdateTimeNotIn applies the NotIn predicate on the "update_time" field.
+func UpdateTimeNotIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldUpdateTime, vs...))
+}
+
+// UpdateTimeGT applies the GT predicate on the "update_time" field.
+func UpdateTimeGT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGT(FieldUpdateTime, v))
+}
+
+// UpdateTimeGTE applies the GTE predicate on the "update_time" field.
+func UpdateTimeGTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldUpdateTime, v))
+}
+
+// UpdateTimeLT applies the LT predicate on the "update_time" field.
+func UpdateTimeLT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLT(FieldUpdateTime, v))
+}
+
+// UpdateTimeLTE applies the LTE predicate on the "update_time" field.
+func UpdateTimeLTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldUpdateTime, v))
 }
 
 // UsernameEQ applies the EQ predicate on the "username" field.
@@ -197,6 +295,81 @@ func EmailContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldEmail, v))
 }
 
+// ProfileImgEQ applies the EQ predicate on the "profile_img" field.
+func ProfileImgEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldProfileImg, v))
+}
+
+// ProfileImgNEQ applies the NEQ predicate on the "profile_img" field.
+func ProfileImgNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldProfileImg, v))
+}
+
+// ProfileImgIn applies the In predicate on the "profile_img" field.
+func ProfileImgIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldProfileImg, vs...))
+}
+
+// ProfileImgNotIn applies the NotIn predicate on the "profile_img" field.
+func ProfileImgNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldProfileImg, vs...))
+}
+
+// ProfileImgGT applies the GT predicate on the "profile_img" field.
+func ProfileImgGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldProfileImg, v))
+}
+
+// ProfileImgGTE applies the GTE predicate on the "profile_img" field.
+func ProfileImgGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldProfileImg, v))
+}
+
+// ProfileImgLT applies the LT predicate on the "profile_img" field.
+func ProfileImgLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldProfileImg, v))
+}
+
+// ProfileImgLTE applies the LTE predicate on the "profile_img" field.
+func ProfileImgLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldProfileImg, v))
+}
+
+// ProfileImgContains applies the Contains predicate on the "profile_img" field.
+func ProfileImgContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldProfileImg, v))
+}
+
+// ProfileImgHasPrefix applies the HasPrefix predicate on the "profile_img" field.
+func ProfileImgHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldProfileImg, v))
+}
+
+// ProfileImgHasSuffix applies the HasSuffix predicate on the "profile_img" field.
+func ProfileImgHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldProfileImg, v))
+}
+
+// ProfileImgIsNil applies the IsNil predicate on the "profile_img" field.
+func ProfileImgIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldProfileImg))
+}
+
+// ProfileImgNotNil applies the NotNil predicate on the "profile_img" field.
+func ProfileImgNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldProfileImg))
+}
+
+// ProfileImgEqualFold applies the EqualFold predicate on the "profile_img" field.
+func ProfileImgEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldProfileImg, v))
+}
+
+// ProfileImgContainsFold applies the ContainsFold predicate on the "profile_img" field.
+func ProfileImgContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldProfileImg, v))
+}
+
 // PasswordEQ applies the EQ predicate on the "password" field.
 func PasswordEQ(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldPassword, v))
@@ -260,6 +433,75 @@ func PasswordEqualFold(v string) predicate.User {
 // PasswordContainsFold applies the ContainsFold predicate on the "password" field.
 func PasswordContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldPassword, v))
+}
+
+// HasOwnRooms applies the HasEdge predicate on the "own_rooms" edge.
+func HasOwnRooms() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, OwnRoomsTable, OwnRoomsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOwnRoomsWith applies the HasEdge predicate on the "own_rooms" edge with a given conditions (other predicates).
+func HasOwnRoomsWith(preds ...predicate.Room) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newOwnRoomsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasParticipantRooms applies the HasEdge predicate on the "participant_rooms" edge.
+func HasParticipantRooms() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, ParticipantRoomsTable, ParticipantRoomsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasParticipantRoomsWith applies the HasEdge predicate on the "participant_rooms" edge with a given conditions (other predicates).
+func HasParticipantRoomsWith(preds ...predicate.Room) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newParticipantRoomsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasMessages applies the HasEdge predicate on the "messages" edge.
+func HasMessages() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, MessagesTable, MessagesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMessagesWith applies the HasEdge predicate on the "messages" edge with a given conditions (other predicates).
+func HasMessagesWith(preds ...predicate.Message) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newMessagesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

@@ -10,7 +10,7 @@ import (
 func UpdateUserInterceptor() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
-		var requestBody dto.UpdateUserDTO
+		var requestBody userdto.UpdateUserDTO
 
 		err := ctx.ShouldBind(&requestBody)
 		if err != nil {

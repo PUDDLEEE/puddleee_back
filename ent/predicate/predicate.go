@@ -6,5 +6,17 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Category is the predicate function for category builders.
+type Category func(*sql.Selector)
+
+// Message is the predicate function for message builders.
+type Message func(*sql.Selector)
+
+// Room is the predicate function for room builders.
+type Room func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
+
+// View is the predicate function for view builders.
+type View func(*sql.Selector)

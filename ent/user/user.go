@@ -3,7 +3,10 @@
 package user
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -11,23 +14,63 @@ const (
 	Label = "user"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldCreateTime holds the string denoting the create_time field in the database.
+	FieldCreateTime = "create_time"
+	// FieldUpdateTime holds the string denoting the update_time field in the database.
+	FieldUpdateTime = "update_time"
 	// FieldUsername holds the string denoting the username field in the database.
 	FieldUsername = "username"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
+	// FieldProfileImg holds the string denoting the profile_img field in the database.
+	FieldProfileImg = "profile_img"
 	// FieldPassword holds the string denoting the password field in the database.
 	FieldPassword = "password"
+	// EdgeOwnRooms holds the string denoting the own_rooms edge name in mutations.
+	EdgeOwnRooms = "own_rooms"
+	// EdgeParticipantRooms holds the string denoting the participant_rooms edge name in mutations.
+	EdgeParticipantRooms = "participant_rooms"
+	// EdgeMessages holds the string denoting the messages edge name in mutations.
+	EdgeMessages = "messages"
 	// Table holds the table name of the user in the database.
 	Table = "users"
+	// OwnRoomsTable is the table that holds the own_rooms relation/edge.
+	OwnRoomsTable = "rooms"
+	// OwnRoomsInverseTable is the table name for the Room entity.
+	// It exists in this package in order to avoid circular dependency with the "room" package.
+	OwnRoomsInverseTable = "rooms"
+	// OwnRoomsColumn is the table column denoting the own_rooms relation/edge.
+	OwnRoomsColumn = "user_own_rooms"
+	// ParticipantRoomsTable is the table that holds the participant_rooms relation/edge. The primary key declared below.
+	ParticipantRoomsTable = "user_participant_rooms"
+	// ParticipantRoomsInverseTable is the table name for the Room entity.
+	// It exists in this package in order to avoid circular dependency with the "room" package.
+	ParticipantRoomsInverseTable = "rooms"
+	// MessagesTable is the table that holds the messages relation/edge.
+	MessagesTable = "messages"
+	// MessagesInverseTable is the table name for the Message entity.
+	// It exists in this package in order to avoid circular dependency with the "message" package.
+	MessagesInverseTable = "messages"
+	// MessagesColumn is the table column denoting the messages relation/edge.
+	MessagesColumn = "user_messages"
 )
 
 // Columns holds all SQL columns for user fields.
 var Columns = []string{
 	FieldID,
+	FieldCreateTime,
+	FieldUpdateTime,
 	FieldUsername,
 	FieldEmail,
+	FieldProfileImg,
 	FieldPassword,
 }
+
+var (
+	// ParticipantRoomsPrimaryKey and ParticipantRoomsColumn2 are the table columns denoting the
+	// primary key for the participant_rooms relation (M2M).
+	ParticipantRoomsPrimaryKey = []string{"user_id", "room_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -40,6 +83,12 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultCreateTime holds the default value on creation for the "create_time" field.
+	DefaultCreateTime func() time.Time
+	// DefaultUpdateTime holds the default value on creation for the "update_time" field.
+	DefaultUpdateTime func() time.Time
+	// UpdateDefaultUpdateTime holds the default value on update for the "update_time" field.
+	UpdateDefaultUpdateTime func() time.Time
 	// UsernameValidator is a validator for the "username" field. It is called by the builders before save.
 	UsernameValidator func(string) error
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
@@ -56,6 +105,16 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
+// ByCreateTime orders the results by the create_time field.
+func ByCreateTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreateTime, opts...).ToFunc()
+}
+
+// ByUpdateTime orders the results by the update_time field.
+func ByUpdateTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdateTime, opts...).ToFunc()
+}
+
 // ByUsername orders the results by the username field.
 func ByUsername(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUsername, opts...).ToFunc()
@@ -66,7 +125,75 @@ func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEmail, opts...).ToFunc()
 }
 
+// ByProfileImg orders the results by the profile_img field.
+func ByProfileImg(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProfileImg, opts...).ToFunc()
+}
+
 // ByPassword orders the results by the password field.
 func ByPassword(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPassword, opts...).ToFunc()
+}
+
+// ByOwnRoomsCount orders the results by own_rooms count.
+func ByOwnRoomsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOwnRoomsStep(), opts...)
+	}
+}
+
+// ByOwnRooms orders the results by own_rooms terms.
+func ByOwnRooms(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOwnRoomsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByParticipantRoomsCount orders the results by participant_rooms count.
+func ByParticipantRoomsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newParticipantRoomsStep(), opts...)
+	}
+}
+
+// ByParticipantRooms orders the results by participant_rooms terms.
+func ByParticipantRooms(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newParticipantRoomsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByMessagesCount orders the results by messages count.
+func ByMessagesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMessagesStep(), opts...)
+	}
+}
+
+// ByMessages orders the results by messages terms.
+func ByMessages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMessagesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newOwnRoomsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OwnRoomsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OwnRoomsTable, OwnRoomsColumn),
+	)
+}
+func newParticipantRoomsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ParticipantRoomsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, ParticipantRoomsTable, ParticipantRoomsPrimaryKey...),
+	)
+}
+func newMessagesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MessagesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MessagesTable, MessagesColumn),
+	)
 }
