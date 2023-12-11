@@ -22,7 +22,7 @@ type UserController struct {
 //
 //	@Summary	Creating user
 //	@Schemes
-//	@Description	create user. this is testing purpose, not actual business logic. Actual Sign Up Logic is in /auth/signup.
+//	@Description	create user. this is testing purpose, not actual business logic. Actual Sign Up Logic is in /jwtAuth/signup.
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json

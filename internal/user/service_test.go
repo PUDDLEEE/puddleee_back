@@ -23,13 +23,13 @@ func TestUserService_CreateUser(t *testing.T) {
 				repo.On("Create",
 					ctx,
 					client,
-					dto.CreateUserDTO{},
+					userdto.CreateUserDTO{},
 				).
 					Return(nil, errors.New("")).
 					Once()
 			},
 			expect: func(t *testing.T, service *UserService, client *ent.Client, ctx context.Context) {
-				user, err := service.CreateUser(dto.CreateUserDTO{})
+				user, err := service.CreateUser(userdto.CreateUserDTO{})
 
 				require.Error(t, err)
 				require.Nil(t, user)
@@ -106,13 +106,13 @@ func TestUserService_UpdateUser(t *testing.T) {
 					ctx,
 					client,
 					1,
-					dto.UpdateUserDTO{},
+					userdto.UpdateUserDTO{},
 				).
 					Return(nil, errors.New("")).
 					Once()
 			},
 			expect: func(t *testing.T, service *UserService, client *ent.Client, ctx context.Context) {
-				user, err := service.UpdateUser(1, dto.UpdateUserDTO{})
+				user, err := service.UpdateUser(1, userdto.UpdateUserDTO{})
 
 				require.Error(t, err)
 				require.Nil(t, user)

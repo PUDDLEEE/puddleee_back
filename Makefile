@@ -9,6 +9,8 @@ userService = IUserService
 roomRepo = IRoomRepository
 roomService = IRoomService
 
+authService = IJwtAuthService
+
 outputDir = pkg/interfaces/mocks
 outputPkg = mocks
 
@@ -30,6 +32,8 @@ createRoomRepoMock :
 createRoomServiceMock :
 	${mockery} --dir=${dir} --name=${roomService} --filename=${roomService}.go --output=${outputDir} --outpkg=${outputPkg}
 
+createAuthServiceMock :
+	${mockery} --dir=${dir} --name=${authService} --filename=${authService}.go --output=${outputDir} --outpkg=${outputPkg}
 
 createDocs :
 	swag init -d ${userDir},${roomDir} -g ${mainDir} --parseDependency

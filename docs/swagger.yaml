@@ -402,7 +402,7 @@ paths:
       consumes:
       - application/json
       description: create user. this is testing purpose, not actual business logic.
-        Actual Sign Up Logic is in /auth/signup.
+        Actual Sign Up Logic is in /jwtAuth/signup.
       parameters:
       - description: Create User Info
         in: body

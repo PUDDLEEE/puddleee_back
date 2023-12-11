@@ -9,7 +9,12 @@ type Server struct {
 	Port int
 }
 
+type Jwt struct {
+	SecretKey string
+}
+
 type Config struct {
 	App    App
 	Server Server
+	Jwt    Jwt
 }

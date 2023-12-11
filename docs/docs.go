@@ -247,7 +247,7 @@ const docTemplate = `{
         },
         "/users": {
             "post": {
-                "description": "create user. this is testing purpose, not actual business logic. Actual Sign Up Logic is in /auth/signup.",
+                "description": "create user. this is testing purpose, not actual business logic. Actual Sign Up Logic is in /jwtAuth/signup.",
                 "consumes": [
                     "application/json"
                 ],
