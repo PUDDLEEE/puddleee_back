@@ -3,14 +3,15 @@ package user
 import (
 	"context"
 	"errors"
-	"github.com/PUDDLEEE/puddleee_back/ent"
-	"github.com/PUDDLEEE/puddleee_back/internal/middlewares"
-	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
-	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces/mocks"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/PUDDLEEE/puddleee_back/ent"
+	"github.com/PUDDLEEE/puddleee_back/internal/middlewares"
+	userdto "github.com/PUDDLEEE/puddleee_back/internal/user/dto"
+	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces/mocks"
+	"github.com/stretchr/testify/require"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,11 +26,11 @@ func TestUserController_CreateUser(t *testing.T) {
 		{
 			name: "CreateUser/email_existed",
 			before: func(t *testing.T, service *mocks.IUserService, router *gin.Engine) {
-				service.On("CreateUser", dto.CreateUserDTO{}).
+				service.On("CreateUser", userdto.CreateUserDTO{}).
 					Return(nil, errors.New("email")).
 					Once()
 				router.Use(func(ctx *gin.Context) {
-					ctx.Set("body", dto.CreateUserDTO{})
+					ctx.Set("body", userdto.CreateUserDTO{})
 				})
 				router.Use(middlewares.ErrorHandler())
 			},
@@ -45,11 +46,11 @@ func TestUserController_CreateUser(t *testing.T) {
 		{
 			name: "CreateUser/username_existed",
 			before: func(t *testing.T, service *mocks.IUserService, router *gin.Engine) {
-				service.On("CreateUser", dto.CreateUserDTO{}).
+				service.On("CreateUser", userdto.CreateUserDTO{}).
 					Return(nil, errors.New("username")).
 					Once()
 				router.Use(func(ctx *gin.Context) {
-					ctx.Set("body", dto.CreateUserDTO{})
+					ctx.Set("body", userdto.CreateUserDTO{})
 				})
 				router.Use(middlewares.ErrorHandler())
 			},
@@ -173,11 +174,11 @@ func TestUserController_UpdateProfile(t *testing.T) {
 		{
 			name: "UpdateProfile/update_error",
 			before: func(t *testing.T, service *mocks.IUserService, router *gin.Engine) {
-				service.On("UpdateUser", 1, dto.UpdateUserDTO{}).
+				service.On("UpdateUser", 1, userdto.UpdateUserDTO{}).
 					Return(nil, errors.New("")).
 					Once()
 				router.Use(func(ctx *gin.Context) {
-					ctx.Set("body", dto.UpdateUserDTO{})
+					ctx.Set("body", userdto.UpdateUserDTO{})
 				})
 				router.Use(middlewares.ErrorHandler())
 			},

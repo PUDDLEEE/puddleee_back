@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/PUDDLEEE/puddleee_back/ent"
-	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
+	userdto "github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +19,7 @@ func TestUserRepository_Create(t *testing.T) {
 		{
 			name: "Create/username_already_exists",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, userdto.CreateUserDTO{
 					Username: "test",
 					Email:    "123",
 					Password: "123",
@@ -27,7 +27,7 @@ func TestUserRepository_Create(t *testing.T) {
 				require.NoError(t, err)
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, userdto.CreateUserDTO{
 					Username: "test",
 					Email:    "1",
 					Password: "1",
@@ -39,7 +39,7 @@ func TestUserRepository_Create(t *testing.T) {
 		{
 			name: "Create/email_already_exists",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, userdto.CreateUserDTO{
 					Username: "test",
 					Email:    "test",
 					Password: "123",
@@ -47,7 +47,7 @@ func TestUserRepository_Create(t *testing.T) {
 				require.NoError(t, err)
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, userdto.CreateUserDTO{
 					Username: "1",
 					Email:    "test",
 					Password: "1",
@@ -62,7 +62,7 @@ func TestUserRepository_Create(t *testing.T) {
 
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, userdto.CreateUserDTO{
 					Username: "",
 					Email:    "123",
 					Password: "123",
@@ -78,7 +78,7 @@ func TestUserRepository_Create(t *testing.T) {
 
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, userdto.CreateUserDTO{
 					Username: "123",
 					Email:    "",
 					Password: "123",
@@ -94,7 +94,7 @@ func TestUserRepository_Create(t *testing.T) {
 
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, userdto.CreateUserDTO{
 					Username: "123",
 					Email:    "123",
 					Password: "",
@@ -165,7 +165,7 @@ func TestUserRepository_Update(t *testing.T) {
 
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Update(ctx, client, 1, dto.UpdateUserDTO{})
+				_, err := repo.Update(ctx, client, 1, userdto.UpdateUserDTO{})
 
 				require.Error(t, err)
 			},
@@ -173,7 +173,7 @@ func TestUserRepository_Update(t *testing.T) {
 		{
 			name: "Update/could_not_empty_dto",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, userdto.CreateUserDTO{
 					Username: "test",
 					Email:    "test",
 					Password: "123",
@@ -181,7 +181,7 @@ func TestUserRepository_Update(t *testing.T) {
 				require.NoError(t, err)
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Update(ctx, client, 1, dto.UpdateUserDTO{})
+				_, err := repo.Update(ctx, client, 1, userdto.UpdateUserDTO{})
 
 				require.Error(t, err)
 			},
@@ -189,7 +189,7 @@ func TestUserRepository_Update(t *testing.T) {
 		{
 			name: "Update/should_update_username_properly",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, userdto.CreateUserDTO{
 					Username: "test",
 					Email:    "test",
 					Password: "test",
@@ -198,7 +198,7 @@ func TestUserRepository_Update(t *testing.T) {
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
 				username := "hello"
-				usernameUpdated, err := repo.Update(ctx, client, 1, dto.UpdateUserDTO{
+				usernameUpdated, err := repo.Update(ctx, client, 1, userdto.UpdateUserDTO{
 					Username: &username,
 				})
 				require.NoError(t, err)
@@ -210,7 +210,7 @@ func TestUserRepository_Update(t *testing.T) {
 		{
 			name: "Update/should_update_email_properly",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, userdto.CreateUserDTO{
 					Username: "test",
 					Email:    "test",
 					Password: "test",
@@ -219,7 +219,7 @@ func TestUserRepository_Update(t *testing.T) {
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
 				email := "123"
-				usernameUpdated, err := repo.Update(ctx, client, 1, dto.UpdateUserDTO{
+				usernameUpdated, err := repo.Update(ctx, client, 1, userdto.UpdateUserDTO{
 					Email: &email,
 				})
 				require.NoError(t, err)
@@ -231,7 +231,7 @@ func TestUserRepository_Update(t *testing.T) {
 		{
 			name: "Update/should_update_password_properly",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, userdto.CreateUserDTO{
 					Username: "test",
 					Email:    "test",
 					Password: "test",
@@ -240,7 +240,7 @@ func TestUserRepository_Update(t *testing.T) {
 			},
 			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
 				password := "123"
-				usernameUpdated, err := repo.Update(ctx, client, 1, dto.UpdateUserDTO{
+				usernameUpdated, err := repo.Update(ctx, client, 1, userdto.UpdateUserDTO{
 					Password: &password,
 				})
 				require.NoError(t, err)
@@ -285,7 +285,7 @@ func TestUserRepository_Delete(t *testing.T) {
 		{
 			name: "Delete/could_delete",
 			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
-				_, err := repo.Create(ctx, client, dto.CreateUserDTO{
+				_, err := repo.Create(ctx, client, userdto.CreateUserDTO{
 					Username: "test",
 					Email:    "test",
 					Password: "test",
