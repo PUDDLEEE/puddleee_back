@@ -14,6 +14,8 @@ jwtAuthService = IJwtAuthService
 authRepo = IAuthRepository
 authService = IAuthService
 
+mailService = IMailService
+
 outputDir = pkg/interfaces/mocks
 outputPkg = mocks
 
@@ -43,6 +45,9 @@ createAuthServiceMock :
 
 createAuthRepositoryMock :
 	${mockery} --dir=${dir} --name=${authRepo} --filename=${authRepo}.go --output=${outputDir} --outpkg=${outputPkg}
+
+createMailServiceMock:
+	${mockery} --dir=${dir} --name=${mailService} --filename=${mailService}.go --output=${outputDir} --outpkg=${outputPkg}
 
 createDocs :
 	swag init -d ${userDir},${roomDir} -g ${mainDir} --parseDependency

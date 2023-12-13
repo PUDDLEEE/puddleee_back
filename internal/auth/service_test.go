@@ -68,11 +68,13 @@ func TestAuthService_CreateEmailVerification(t *testing.T) {
 			authRepo := mocks.NewIAuthRepository(t)
 			userService := mocks.NewIUserService(t)
 			jwtService := mocks.NewIJwtAuthService(t)
+			mailService := mocks.NewIMailService(t)
 
 			params := &AuthServiceParameter{}
 			params.authRepo = authRepo
 			params.userService = userService
 			params.jwtService = jwtService
+			params.mailService = mailService
 			params.ctx = context.Background()
 			params.client = client
 
@@ -124,11 +126,13 @@ func TestAuthService_VerifyEmailVerification(t *testing.T) {
 			authRepo := mocks.NewIAuthRepository(t)
 			userService := mocks.NewIUserService(t)
 			jwtService := mocks.NewIJwtAuthService(t)
+			mailService := mocks.NewIMailService(t)
 
 			params := &AuthServiceParameter{}
 			params.authRepo = authRepo
 			params.userService = userService
 			params.jwtService = jwtService
+			params.mailService = mailService
 			params.ctx = context.Background()
 			params.client = client
 
@@ -183,11 +187,13 @@ func TestAuthService_Signup(t *testing.T) {
 			authRepo := mocks.NewIAuthRepository(t)
 			userService := mocks.NewIUserService(t)
 			jwtService := mocks.NewIJwtAuthService(t)
+			mailService := mocks.NewIMailService(t)
 
 			params := &AuthServiceParameter{}
 			params.authRepo = authRepo
 			params.userService = userService
 			params.jwtService = jwtService
+			params.mailService = mailService
 			params.ctx = context.Background()
 			params.client = client
 
@@ -266,11 +272,14 @@ func TestAuthService_Signin(t *testing.T) {
 			authRepo := mocks.NewIAuthRepository(t)
 			userService := mocks.NewIUserService(t)
 			jwtService := mocks.NewIJwtAuthService(t)
+			mailService := mocks.NewIMailService(t)
 
 			params := &AuthServiceParameter{}
 			params.authRepo = authRepo
 			params.userService = userService
 			params.jwtService = jwtService
+			params.mailService = mailService
+
 			params.ctx = context.Background()
 			params.client = client
 

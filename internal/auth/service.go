@@ -7,6 +7,7 @@ import (
 	authdto "github.com/PUDDLEEE/puddleee_back/internal/auth/dto"
 	"github.com/PUDDLEEE/puddleee_back/internal/errors"
 	"github.com/PUDDLEEE/puddleee_back/internal/jwtAuth"
+	"github.com/PUDDLEEE/puddleee_back/internal/mail"
 	"github.com/PUDDLEEE/puddleee_back/internal/user"
 	userdto "github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces"
@@ -17,6 +18,7 @@ type AuthService struct {
 	authRepo    interfaces.IAuthRepository
 	userService interfaces.IUserService
 	jwtService  interfaces.IJwtAuthService
+	mailService interfaces.IMailService
 	ctx         context.Context
 	client      *ent.Client
 }
@@ -94,10 +96,12 @@ func NewAuthService(params *AuthServiceParameter) *AuthService {
 	if authRepo, ok := params.authRepo.(*AuthRepository); ok {
 		userService, _ := params.userService.(*user.UserService)
 		jwtService, _ := params.jwtService.(*jwtAuth.JwtAuthService)
+		mailService, _ := params.mailService.(*mail.MailService)
 		return &AuthService{
 			authRepo:    authRepo,
 			userService: userService,
 			jwtService:  jwtService,
+			mailService: mailService,
 			ctx:         params.ctx,
 			client:      params.client,
 		}
@@ -106,10 +110,12 @@ func NewAuthService(params *AuthServiceParameter) *AuthService {
 	if mockAuthRepo, ok := params.authRepo.(*mocks.IAuthRepository); ok {
 		mockUserService, _ := params.userService.(*mocks.IUserService)
 		mockJwtService, _ := params.jwtService.(*mocks.IJwtAuthService)
+		mockMailService, _ := params.mailService.(*mocks.IMailService)
 		return &AuthService{
 			authRepo:    mockAuthRepo,
 			userService: mockUserService,
 			jwtService:  mockJwtService,
+			mailService: mockMailService,
 			ctx:         params.ctx,
 			client:      params.client,
 		}
