@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/PUDDLEEE/puddleee_back/ent"
-	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
+	userdto "github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces"
 	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces/mocks"
 )
@@ -23,8 +23,16 @@ func (s *UserService) CreateUser(dto userdto.CreateUserDTO) (*ent.User, error) {
 	return user, nil
 }
 
-func (s *UserService) FindOneUser(id int) (*ent.User, error) {
+func (s *UserService) FindOneUserById(id int) (*ent.User, error) {
 	user, err := s.userRepository.FindOneById(s.ctx, s.client, id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *UserService) FindOneUserByEmail(email string) (*ent.User, error) {
+	user, err := s.userRepository.FindOneByEmail(s.ctx, s.client, email)
 	if err != nil {
 		return nil, err
 	}

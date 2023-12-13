@@ -153,6 +153,39 @@ func TestUserRepository_FindOneById(t *testing.T) {
 	}
 }
 
+func TestUserRepository_FindOneByEmail(t *testing.T) {
+	tests := []struct {
+		name   string
+		before func(*testing.T, *UserRepository, *ent.Client, context.Context)
+		expect func(*testing.T, *UserRepository, *ent.Client, context.Context)
+	}{
+		{
+			name: "FindOneByEmail/could_not_found",
+			before: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
+
+			},
+			expect: func(t *testing.T, repo *UserRepository, client *ent.Client, ctx context.Context) {
+				_, err := repo.FindOneByEmail(ctx, client, "")
+
+				require.Error(t, err)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			require.NoError(t, err)
+			defer client.Close()
+			require.NoError(t, client.Schema.Create(context.Background()))
+
+			repo := &UserRepository{}
+			tt.before(t, repo, client, context.Background())
+			tt.expect(t, repo, client, context.Background())
+		})
+	}
+}
+
 func TestUserRepository_Update(t *testing.T) {
 	tests := []struct {
 		name   string

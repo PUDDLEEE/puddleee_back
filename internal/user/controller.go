@@ -9,7 +9,7 @@ import (
 
 	_ "github.com/PUDDLEEE/puddleee_back/docs"
 	"github.com/PUDDLEEE/puddleee_back/internal/errors"
-	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
+	userdto "github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces"
 	"github.com/PUDDLEEE/puddleee_back/pkg/interfaces/mocks"
 )
@@ -78,7 +78,7 @@ func (c *UserController) ViewProfile(ctx *gin.Context) {
 		ctx.Error(paramError)
 		return
 	}
-	existedUser, err := c.userService.FindOneUser(id)
+	existedUser, err := c.userService.FindOneUserById(id)
 	if err != nil {
 		notfoundError := errors.NOT_FOUND
 		notfoundError.Data = err.Error()

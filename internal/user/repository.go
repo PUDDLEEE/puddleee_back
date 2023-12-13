@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+
 	userdto "github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 
 	"github.com/PUDDLEEE/puddleee_back/ent"
@@ -34,6 +35,15 @@ func (u *UserRepository) FindOneById(ctx context.Context, client *ent.Client, id
 	return existedUser, nil
 }
 
+func (u *UserRepository) FindOneByEmail(ctx context.Context, client *ent.Client, email string) (*ent.User, error) {
+	existedUser, err := client.User.Query().Where(user.Email(email)).
+		Select(user.FieldID, user.FieldEmail, user.FieldUsername).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return existedUser, nil
+}
 func (u *UserRepository) Update(ctx context.Context, client *ent.Client, id int, dto userdto.UpdateUserDTO) (*ent.User, error) {
 	if dto.Username == nil && dto.Email == nil && dto.Password == nil {
 		err := errors.New("at least one field should contain data")

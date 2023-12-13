@@ -111,7 +111,7 @@ func TestUserController_ViewProfile(t *testing.T) {
 		{
 			name: "ViewProfile/user_not_found",
 			before: func(t *testing.T, service *mocks.IUserService, router *gin.Engine) {
-				service.On("FindOneUser", 1).
+				service.On("FindOneUserById", 1).
 					Return(nil, errors.New("")).
 					Once()
 				router.Use(middlewares.ErrorHandler())

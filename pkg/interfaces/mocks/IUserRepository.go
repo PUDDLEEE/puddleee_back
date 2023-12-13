@@ -65,6 +65,36 @@ func (_m *IUserRepository) Delete(_a0 context.Context, _a1 *ent.Client, _a2 int)
 	return r0
 }
 
+// FindOneByEmail provides a mock function with given fields: _a0, _a1, _a2
+func (_m *IUserRepository) FindOneByEmail(_a0 context.Context, _a1 *ent.Client, _a2 string) (*ent.User, error) {
+	ret := _m.Called(_a0, _a1, _a2)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FindOneByEmail")
+	}
+
+	var r0 *ent.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *ent.Client, string) (*ent.User, error)); ok {
+		return rf(_a0, _a1, _a2)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *ent.Client, string) *ent.User); ok {
+		r0 = rf(_a0, _a1, _a2)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.User)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *ent.Client, string) error); ok {
+		r1 = rf(_a0, _a1, _a2)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindOneById provides a mock function with given fields: _a0, _a1, _a2
 func (_m *IUserRepository) FindOneById(_a0 context.Context, _a1 *ent.Client, _a2 int) (*ent.User, error) {
 	ret := _m.Called(_a0, _a1, _a2)

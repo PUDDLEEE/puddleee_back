@@ -77,7 +77,7 @@ func (a *AuthRepository) Delete(ctx context.Context, client *ent.Client, uuid st
 	return nil
 }
 
-func (a *AuthRepository) GenerateUUIDFromString(email string) *uuid.UUID {
+func (a *AuthRepository) GenerateUUIDFromString(email string) uuid.UUID {
 	md5hash := md5.New()
 	md5hash.Write([]byte(email))
 
@@ -87,7 +87,7 @@ func (a *AuthRepository) GenerateUUIDFromString(email string) *uuid.UUID {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &uuid
+	return uuid
 }
 
 func (a *AuthRepository) GenerateCode(max int) string {
@@ -102,6 +102,6 @@ func (a *AuthRepository) GenerateCode(max int) string {
 	return string(b)
 }
 
-func NewRepository() *AuthRepository {
+func NewAuthRepository() *AuthRepository {
 	return &AuthRepository{}
 }

@@ -7,7 +7,7 @@ import (
 
 type IJwtAuthService interface {
 	CreateAccessToken(jwtAuth.AuthTokenClaims) (*string, error)
-	CreateRefreshToken(jwt.RegisteredClaims) (*string, error)
+	CreateRefreshToken(jwtAuth.AuthTokenClaims) (*string, error)
 	ReassignAccessToken(string, string) (*string, error)
 	ParseAccessToken(string) (*jwt.Token, error)
 	ParseRefreshToken(string) (*jwt.Token, error)

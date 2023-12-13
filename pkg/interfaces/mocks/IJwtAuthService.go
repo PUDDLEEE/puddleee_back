@@ -44,7 +44,7 @@ func (_m *IJwtAuthService) CreateAccessToken(_a0 jwtAuth.AuthTokenClaims) (*stri
 }
 
 // CreateRefreshToken provides a mock function with given fields: _a0
-func (_m *IJwtAuthService) CreateRefreshToken(_a0 jwt.RegisteredClaims) (*string, error) {
+func (_m *IJwtAuthService) CreateRefreshToken(_a0 jwtAuth.AuthTokenClaims) (*string, error) {
 	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
@@ -53,10 +53,10 @@ func (_m *IJwtAuthService) CreateRefreshToken(_a0 jwt.RegisteredClaims) (*string
 
 	var r0 *string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(jwt.RegisteredClaims) (*string, error)); ok {
+	if rf, ok := ret.Get(0).(func(jwtAuth.AuthTokenClaims) (*string, error)); ok {
 		return rf(_a0)
 	}
-	if rf, ok := ret.Get(0).(func(jwt.RegisteredClaims) *string); ok {
+	if rf, ok := ret.Get(0).(func(jwtAuth.AuthTokenClaims) *string); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
@@ -64,7 +64,7 @@ func (_m *IJwtAuthService) CreateRefreshToken(_a0 jwt.RegisteredClaims) (*string
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(jwt.RegisteredClaims) error); ok {
+	if rf, ok := ret.Get(1).(func(jwtAuth.AuthTokenClaims) error); ok {
 		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)

@@ -116,19 +116,19 @@ func (_m *IAuthRepository) GenerateCode(_a0 int) string {
 }
 
 // GenerateUUIDFromString provides a mock function with given fields: _a0
-func (_m *IAuthRepository) GenerateUUIDFromString(_a0 string) *uuid.UUID {
+func (_m *IAuthRepository) GenerateUUIDFromString(_a0 string) uuid.UUID {
 	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GenerateUUIDFromString")
 	}
 
-	var r0 *uuid.UUID
-	if rf, ok := ret.Get(0).(func(string) *uuid.UUID); ok {
+	var r0 uuid.UUID
+	if rf, ok := ret.Get(0).(func(string) uuid.UUID); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*uuid.UUID)
+			r0 = ret.Get(0).(uuid.UUID)
 		}
 	}
 

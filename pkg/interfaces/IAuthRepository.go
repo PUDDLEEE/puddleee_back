@@ -13,6 +13,6 @@ type IAuthRepository interface {
 	Update(context.Context, *ent.Client, string, authdto.UpdateVerificationDTO) (*ent.Verification, error)
 	FindOneByUUID(context.Context, *ent.Client, string) (*ent.Verification, error)
 	Delete(context.Context, *ent.Client, string) error
-	GenerateUUIDFromString(string) *uuid.UUID
+	GenerateUUIDFromString(string) uuid.UUID
 	GenerateCode(int) string
 }

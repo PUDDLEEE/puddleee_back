@@ -63,12 +63,42 @@ func (_m *IUserService) DeleteUser(_a0 int) error {
 	return r0
 }
 
-// FindOneUser provides a mock function with given fields: _a0
-func (_m *IUserService) FindOneUser(_a0 int) (*ent.User, error) {
+// FindOneUserByEmail provides a mock function with given fields: _a0
+func (_m *IUserService) FindOneUserByEmail(_a0 string) (*ent.User, error) {
 	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FindOneUser")
+		panic("no return value specified for FindOneUserByEmail")
+	}
+
+	var r0 *ent.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (*ent.User, error)); ok {
+		return rf(_a0)
+	}
+	if rf, ok := ret.Get(0).(func(string) *ent.User); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.User)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindOneUserById provides a mock function with given fields: _a0
+func (_m *IUserService) FindOneUserById(_a0 int) (*ent.User, error) {
+	ret := _m.Called(_a0)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FindOneUserById")
 	}
 
 	var r0 *ent.User

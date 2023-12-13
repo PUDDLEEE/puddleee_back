@@ -2,12 +2,13 @@ package interfaces
 
 import (
 	"github.com/PUDDLEEE/puddleee_back/ent"
-	"github.com/PUDDLEEE/puddleee_back/internal/user/dto"
+	userdto "github.com/PUDDLEEE/puddleee_back/internal/user/dto"
 )
 
 type IUserService interface {
 	CreateUser(userdto.CreateUserDTO) (*ent.User, error)
-	FindOneUser(int) (*ent.User, error)
+	FindOneUserById(int) (*ent.User, error)
+	FindOneUserByEmail(string) (*ent.User, error)
 	UpdateUser(int, userdto.UpdateUserDTO) (*ent.User, error)
 	DeleteUser(int) error
 }
