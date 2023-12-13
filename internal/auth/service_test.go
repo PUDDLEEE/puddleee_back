@@ -290,3 +290,60 @@ func TestAuthService_Signin(t *testing.T) {
 		})
 	}
 }
+
+func TestAuthService_SendEmailVerification(t *testing.T) {
+	tests := []struct {
+		name   string
+		before func(*testing.T, *mocks.IMailService, *ent.Client, context.Context)
+		expect func(*testing.T, *AuthService, *ent.Client, context.Context)
+	}{
+		{
+			name: "SendEmailVerification/send_mail_failed",
+			before: func(t *testing.T, mailService *mocks.IMailService, client *ent.Client, ctx context.Context) {
+				mailService.On("Send", "", "").Return(errors.New("")).Once()
+			},
+			expect: func(t *testing.T, service *AuthService, client *ent.Client, ctx context.Context) {
+				err := service.SendEmailVerification("", &ent.Verification{})
+				require.Error(t, err)
+			},
+		},
+		{
+			name: "SendEmailVerification/send_mail_success",
+			before: func(t *testing.T, mailService *mocks.IMailService, client *ent.Client, ctx context.Context) {
+				mailService.On("Send", "", "").Return(nil).Once()
+			},
+			expect: func(t *testing.T, service *AuthService, client *ent.Client, ctx context.Context) {
+				err := service.SendEmailVerification("", &ent.Verification{})
+				require.NoError(t, err)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+			require.NoError(t, err)
+			defer client.Close()
+			require.NoError(t, client.Schema.Create(context.Background()))
+
+			authRepo := mocks.NewIAuthRepository(t)
+			userService := mocks.NewIUserService(t)
+			jwtService := mocks.NewIJwtAuthService(t)
+			mailService := mocks.NewIMailService(t)
+
+			params := &AuthServiceParameter{}
+			params.authRepo = authRepo
+			params.userService = userService
+			params.jwtService = jwtService
+			params.mailService = mailService
+
+			params.ctx = context.Background()
+			params.client = client
+
+			authService := NewAuthService(params)
+
+			tt.before(t, mailService, client, context.Background())
+			tt.expect(t, authService, client, context.Background())
+		})
+	}
+}

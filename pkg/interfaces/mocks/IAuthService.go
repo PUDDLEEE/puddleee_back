@@ -46,17 +46,17 @@ func (_m *IAuthService) CreateEmailVerification(_a0 string) (*ent.Verification, 
 	return r0, r1
 }
 
-// SendEmailVerification provides a mock function with given fields: _a0
-func (_m *IAuthService) SendEmailVerification(_a0 *ent.Verification) error {
-	ret := _m.Called(_a0)
+// SendEmailVerification provides a mock function with given fields: _a0, _a1
+func (_m *IAuthService) SendEmailVerification(_a0 string, _a1 *ent.Verification) error {
+	ret := _m.Called(_a0, _a1)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SendEmailVerification")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*ent.Verification) error); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(string, *ent.Verification) error); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Error(0)
 	}

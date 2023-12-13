@@ -10,6 +10,6 @@ type IAuthService interface {
 	Signin(authdto.SigninDTO) (*authdto.SigninOutputDTO, error)
 	Signup(userdto.CreateUserDTO) (*ent.User, error)
 	CreateEmailVerification(string) (*ent.Verification, error)
-	SendEmailVerification(*ent.Verification) error
+	SendEmailVerification(string, *ent.Verification) error
 	VerifyEmailVerification(string, string) error
 }

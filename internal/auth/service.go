@@ -74,7 +74,11 @@ func (a *AuthService) CreateEmailVerification(email string) (*ent.Verification, 
 	return newVerification, nil
 }
 
-func (a *AuthService) SendEmailVerification(*ent.Verification) error {
+func (a *AuthService) SendEmailVerification(email string, verification *ent.Verification) error {
+	err := a.mailService.Send(email, verification.Code)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
