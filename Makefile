@@ -22,6 +22,7 @@ outputPkg = mocks
 mainDir = ../../main.go
 userDir = internal/user
 roomDir = internal/room
+authDir = internal/auth
 viewDir = internal/view
 messageDir = internal/message
 
@@ -50,4 +51,4 @@ createMailServiceMock:
 	${mockery} --dir=${dir} --name=${mailService} --filename=${mailService}.go --output=${outputDir} --outpkg=${outputPkg}
 
 createDocs :
-	swag init -d ${userDir},${roomDir} -g ${mainDir} --parseDependency
+	swag init -d ${userDir},${roomDir},${authDir} -g ${mainDir} --parseDependency

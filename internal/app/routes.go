@@ -2,9 +2,12 @@ package app
 
 import (
 	"context"
-	"github.com/PUDDLEEE/puddleee_back/internal/room"
 	"log"
 	"sync"
+
+	"github.com/PUDDLEEE/puddleee_back/internal/auth"
+	"github.com/PUDDLEEE/puddleee_back/internal/mail"
+	"github.com/PUDDLEEE/puddleee_back/internal/room"
 
 	"github.com/PUDDLEEE/puddleee_back/internal/interceptors"
 	"github.com/gin-contrib/cors"
@@ -37,9 +40,18 @@ func (app *Application) setRoutes() {
 	v1 := routes.Router.Group("/api/v1")
 	userController := user.InitializeController(context.Background(), app.Client)
 	roomController := room.InitializeController(context.Background(), app.Client)
+
+	mailParams := &mail.MailServiceParams{}
+	mailParams.From = app.Config.Mail.From
+	mailParams.Port = app.Config.Mail.Port
+	mailParams.Server = app.Config.Mail.Server
+	mailParams.Password = app.Config.Mail.Password
+
+	authController := auth.InitializeController(context.Background(), app.Client, app.Config.Jwt.SecretKey, *mailParams)
 	routes.addSwagger(v1)
 	routes.addUser(v1, userController)
 	routes.addRoom(v1, roomController)
+	routes.addAuth(v1, authController)
 }
 
 func (r *Routes) addSwagger(rg *gin.RouterGroup) {
@@ -83,4 +95,13 @@ func (r *Routes) addRoom(rg *gin.RouterGroup, controller *room.RoomController) {
 	roomGroup.POST("", controller.CreateRoom)
 	roomGroup.DELETE("/:id", controller.DeleteRoom)
 	roomGroup.PATCH("/:id", controller.UpdateRoomInfo)
+}
+
+func (r *Routes) addAuth(rg *gin.RouterGroup, controller *auth.AuthController) {
+	authGroup := rg.Group("/auth")
+
+	authGroup.POST("/signin", controller.Signin)
+	authGroup.POST("/signup", controller.Signup)
+	authGroup.POST("/mail", controller.SendConfirmationMail)
+	authGroup.POST("/confirm", controller.VerifyConfirmationMail)
 }

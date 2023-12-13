@@ -8,10 +8,10 @@ import (
 )
 
 type MailService struct {
-	password string
-	from     string
-	server   string
-	port     string
+	Password string
+	From     string
+	Server   string
+	Port     string
 }
 
 type MailServiceParams struct {
@@ -20,12 +20,12 @@ type MailServiceParams struct {
 
 func (m *MailService) Send(to string, subject string) error {
 	mail := gomail.NewMessage()
-	mail.SetHeader("From", m.from)
+	mail.SetHeader("From", m.From)
 	mail.SetHeader("To", to)
 	mail.SetHeader("Subject", subject)
 	mail.SetBody("text/plain", "test.")
-	port, _ := strconv.Atoi(m.port)
-	d := gomail.NewDialer(m.server, port, m.from, m.password)
+	port, _ := strconv.Atoi(m.Port)
+	d := gomail.NewDialer(m.Server, port, m.From, m.Password)
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if err := d.DialAndSend(mail); err != nil {
@@ -36,9 +36,9 @@ func (m *MailService) Send(to string, subject string) error {
 
 func NewMailService(params MailServiceParams) *MailService {
 	return &MailService{
-		password: params.password,
-		from:     params.from,
-		server:   params.server,
-		port:     params.port,
+		Password: params.Password,
+		From:     params.From,
+		Server:   params.Server,
+		Port:     params.Port,
 	}
 }

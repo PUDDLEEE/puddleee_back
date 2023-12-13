@@ -37,17 +37,17 @@ func TestMailService_Send(t *testing.T) {
 			}
 			port := strconv.Itoa(server.PortNumber())
 			params := MailServiceParams{}
-			params.server = "127.0.0.1"
-			params.port = port
-			params.from = "123@naver.com"
-			params.password = "123"
+			params.Server = "127.0.0.1"
+			params.Port = port
+			params.From = "123@naver.com"
+			params.Password = "123"
 			service := NewMailService(params)
 
-			address := fmt.Sprintf("%s:%s", params.server, port)
+			address := fmt.Sprintf("%s:%s", params.Server, port)
 			timeout := time.Duration(2) * time.Second
 
 			connection, _ := net.DialTimeout("tcp", address, timeout)
-			_, _ = smtp.NewClient(connection, params.server)
+			_, _ = smtp.NewClient(connection, params.Server)
 
 			server.Messages()
 			tt.expect(t, service)

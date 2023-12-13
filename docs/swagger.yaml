@@ -1,5 +1,19 @@
 basePath: /api/v1
 definitions:
+  authdto.SigninDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  authdto.SigninOutputDTO:
+    properties:
+      accessToken:
+        type: string
+      refreshToken:
+        type: string
+    type: object
   ent.Category:
     properties:
       create_time:
@@ -160,6 +174,27 @@ definitions:
           $ref: '#/definitions/ent.Room'
         type: array
     type: object
+  ent.Verification:
+    properties:
+      code:
+        description: Code holds the value of the "code" field.
+        type: string
+      create_time:
+        description: CreateTime holds the value of the "create_time" field.
+        type: string
+      expired_at:
+        description: ExpiredAt holds the value of the "expired_at" field.
+        type: string
+      id:
+        description: ID of the ent.
+        type: integer
+      update_time:
+        description: UpdateTime holds the value of the "update_time" field.
+        type: string
+      uuid:
+        description: UUID holds the value of the "uuid" field.
+        type: string
+    type: object
   ent.View:
     properties:
       create_time:
@@ -247,6 +282,61 @@ info:
   title: Puddle Chat Application API
   version: "1.0"
 paths:
+  /confirm:
+    post:
+      consumes:
+      - application/json
+      description: Verify code from the user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.Verification'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+      summary: Verify code from the user.
+      tags:
+      - auth
+  /mail:
+    post:
+      consumes:
+      - application/json
+      description: Send Confirmation Mail to user which attached with confirmation
+        code.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.Verification'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+      summary: Send Confirmation Mail to user.
+      tags:
+      - auth
   /rooms:
     delete:
       consumes:
@@ -397,6 +487,74 @@ paths:
       summary: View Specific Room's Detail
       tags:
       - rooms
+  /signin:
+    post:
+      consumes:
+      - application/json
+      description: Sign in to our service.
+      parameters:
+      - description: Sign-in info
+        in: body
+        name: SigninDTO
+        required: true
+        schema:
+          $ref: '#/definitions/authdto.SigninDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/authdto.SigninOutputDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+      summary: Sign in
+      tags:
+      - auth
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Sign up to our service.
+      parameters:
+      - description: Sign-up info
+        in: body
+        name: createUserDTO
+        required: true
+        schema:
+          $ref: '#/definitions/userdto.CreateUserDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ent.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.CustomError'
+      summary: Sign up
+      tags:
+      - auth
   /users:
     post:
       consumes:
