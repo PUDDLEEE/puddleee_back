@@ -89,6 +89,21 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
+	// VerificationsColumns holds the columns for the "verifications" table.
+	VerificationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "uuid", Type: field.TypeUUID, Unique: true},
+		{Name: "code", Type: field.TypeString},
+		{Name: "expired_at", Type: field.TypeTime},
+	}
+	// VerificationsTable holds the schema information for the "verifications" table.
+	VerificationsTable = &schema.Table{
+		Name:       "verifications",
+		Columns:    VerificationsColumns,
+		PrimaryKey: []*schema.Column{VerificationsColumns[0]},
+	}
 	// ViewsColumns holds the columns for the "views" table.
 	ViewsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -167,6 +182,7 @@ var (
 		MessagesTable,
 		RoomsTable,
 		UsersTable,
+		VerificationsTable,
 		ViewsTable,
 		RoomMessagesTable,
 		UserParticipantRoomsTable,

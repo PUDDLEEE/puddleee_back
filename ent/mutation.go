@@ -16,7 +16,9 @@ import (
 	"github.com/PUDDLEEE/puddleee_back/ent/predicate"
 	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
+	"github.com/PUDDLEEE/puddleee_back/ent/verification"
 	"github.com/PUDDLEEE/puddleee_back/ent/view"
+	"github.com/google/uuid"
 )
 
 const (
@@ -28,11 +30,12 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeCategory = "Category"
-	TypeMessage  = "Message"
-	TypeRoom     = "Room"
-	TypeUser     = "User"
-	TypeView     = "View"
+	TypeCategory     = "Category"
+	TypeMessage      = "Message"
+	TypeRoom         = "Room"
+	TypeUser         = "User"
+	TypeVerification = "Verification"
+	TypeView         = "View"
 )
 
 // CategoryMutation represents an operation that mutates the Category nodes in the graph.
@@ -2888,6 +2891,548 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)
+}
+
+// VerificationMutation represents an operation that mutates the Verification nodes in the graph.
+type VerificationMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	create_time   *time.Time
+	update_time   *time.Time
+	uuid          *uuid.UUID
+	code          *string
+	expired_at    *time.Time
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*Verification, error)
+	predicates    []predicate.Verification
+}
+
+var _ ent.Mutation = (*VerificationMutation)(nil)
+
+// verificationOption allows management of the mutation configuration using functional options.
+type verificationOption func(*VerificationMutation)
+
+// newVerificationMutation creates new mutation for the Verification entity.
+func newVerificationMutation(c config, op Op, opts ...verificationOption) *VerificationMutation {
+	m := &VerificationMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeVerification,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withVerificationID sets the ID field of the mutation.
+func withVerificationID(id int) verificationOption {
+	return func(m *VerificationMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Verification
+		)
+		m.oldValue = func(ctx context.Context) (*Verification, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Verification.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withVerification sets the old Verification of the mutation.
+func withVerification(node *Verification) verificationOption {
+	return func(m *VerificationMutation) {
+		m.oldValue = func(context.Context) (*Verification, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m VerificationMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m VerificationMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *VerificationMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *VerificationMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Verification.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreateTime sets the "create_time" field.
+func (m *VerificationMutation) SetCreateTime(t time.Time) {
+	m.create_time = &t
+}
+
+// CreateTime returns the value of the "create_time" field in the mutation.
+func (m *VerificationMutation) CreateTime() (r time.Time, exists bool) {
+	v := m.create_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreateTime returns the old "create_time" field's value of the Verification entity.
+// If the Verification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VerificationMutation) OldCreateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreateTime: %w", err)
+	}
+	return oldValue.CreateTime, nil
+}
+
+// ResetCreateTime resets all changes to the "create_time" field.
+func (m *VerificationMutation) ResetCreateTime() {
+	m.create_time = nil
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (m *VerificationMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *VerificationMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the Verification entity.
+// If the Verification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VerificationMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *VerificationMutation) ResetUpdateTime() {
+	m.update_time = nil
+}
+
+// SetUUID sets the "uuid" field.
+func (m *VerificationMutation) SetUUID(u uuid.UUID) {
+	m.uuid = &u
+}
+
+// UUID returns the value of the "uuid" field in the mutation.
+func (m *VerificationMutation) UUID() (r uuid.UUID, exists bool) {
+	v := m.uuid
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUUID returns the old "uuid" field's value of the Verification entity.
+// If the Verification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VerificationMutation) OldUUID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUUID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUUID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUUID: %w", err)
+	}
+	return oldValue.UUID, nil
+}
+
+// ResetUUID resets all changes to the "uuid" field.
+func (m *VerificationMutation) ResetUUID() {
+	m.uuid = nil
+}
+
+// SetCode sets the "code" field.
+func (m *VerificationMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *VerificationMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the Verification entity.
+// If the Verification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VerificationMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *VerificationMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetExpiredAt sets the "expired_at" field.
+func (m *VerificationMutation) SetExpiredAt(t time.Time) {
+	m.expired_at = &t
+}
+
+// ExpiredAt returns the value of the "expired_at" field in the mutation.
+func (m *VerificationMutation) ExpiredAt() (r time.Time, exists bool) {
+	v := m.expired_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiredAt returns the old "expired_at" field's value of the Verification entity.
+// If the Verification object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VerificationMutation) OldExpiredAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiredAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiredAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiredAt: %w", err)
+	}
+	return oldValue.ExpiredAt, nil
+}
+
+// ResetExpiredAt resets all changes to the "expired_at" field.
+func (m *VerificationMutation) ResetExpiredAt() {
+	m.expired_at = nil
+}
+
+// Where appends a list predicates to the VerificationMutation builder.
+func (m *VerificationMutation) Where(ps ...predicate.Verification) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the VerificationMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *VerificationMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Verification, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *VerificationMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *VerificationMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Verification).
+func (m *VerificationMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *VerificationMutation) Fields() []string {
+	fields := make([]string, 0, 5)
+	if m.create_time != nil {
+		fields = append(fields, verification.FieldCreateTime)
+	}
+	if m.update_time != nil {
+		fields = append(fields, verification.FieldUpdateTime)
+	}
+	if m.uuid != nil {
+		fields = append(fields, verification.FieldUUID)
+	}
+	if m.code != nil {
+		fields = append(fields, verification.FieldCode)
+	}
+	if m.expired_at != nil {
+		fields = append(fields, verification.FieldExpiredAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *VerificationMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case verification.FieldCreateTime:
+		return m.CreateTime()
+	case verification.FieldUpdateTime:
+		return m.UpdateTime()
+	case verification.FieldUUID:
+		return m.UUID()
+	case verification.FieldCode:
+		return m.Code()
+	case verification.FieldExpiredAt:
+		return m.ExpiredAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *VerificationMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case verification.FieldCreateTime:
+		return m.OldCreateTime(ctx)
+	case verification.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
+	case verification.FieldUUID:
+		return m.OldUUID(ctx)
+	case verification.FieldCode:
+		return m.OldCode(ctx)
+	case verification.FieldExpiredAt:
+		return m.OldExpiredAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown Verification field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *VerificationMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case verification.FieldCreateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreateTime(v)
+		return nil
+	case verification.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
+	case verification.FieldUUID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUUID(v)
+		return nil
+	case verification.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case verification.FieldExpiredAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiredAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Verification field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *VerificationMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *VerificationMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *VerificationMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Verification numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *VerificationMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *VerificationMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *VerificationMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Verification nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *VerificationMutation) ResetField(name string) error {
+	switch name {
+	case verification.FieldCreateTime:
+		m.ResetCreateTime()
+		return nil
+	case verification.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
+	case verification.FieldUUID:
+		m.ResetUUID()
+		return nil
+	case verification.FieldCode:
+		m.ResetCode()
+		return nil
+	case verification.FieldExpiredAt:
+		m.ResetExpiredAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Verification field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *VerificationMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *VerificationMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *VerificationMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *VerificationMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *VerificationMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *VerificationMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *VerificationMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Verification unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *VerificationMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Verification edge %s", name)
 }
 
 // ViewMutation represents an operation that mutates the View nodes in the graph.

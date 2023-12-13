@@ -16,6 +16,7 @@ import (
 	"github.com/PUDDLEEE/puddleee_back/ent/message"
 	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
+	"github.com/PUDDLEEE/puddleee_back/ent/verification"
 	"github.com/PUDDLEEE/puddleee_back/ent/view"
 )
 
@@ -77,11 +78,12 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			category.Table: category.ValidColumn,
-			message.Table:  message.ValidColumn,
-			room.Table:     room.ValidColumn,
-			user.Table:     user.ValidColumn,
-			view.Table:     view.ValidColumn,
+			category.Table:     category.ValidColumn,
+			message.Table:      message.ValidColumn,
+			room.Table:         room.ValidColumn,
+			user.Table:         user.ValidColumn,
+			verification.Table: verification.ValidColumn,
+			view.Table:         view.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

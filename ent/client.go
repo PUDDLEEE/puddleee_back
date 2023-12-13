@@ -19,6 +19,7 @@ import (
 	"github.com/PUDDLEEE/puddleee_back/ent/message"
 	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
+	"github.com/PUDDLEEE/puddleee_back/ent/verification"
 	"github.com/PUDDLEEE/puddleee_back/ent/view"
 )
 
@@ -35,6 +36,8 @@ type Client struct {
 	Room *RoomClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// Verification is the client for interacting with the Verification builders.
+	Verification *VerificationClient
 	// View is the client for interacting with the View builders.
 	View *ViewClient
 }
@@ -52,6 +55,7 @@ func (c *Client) init() {
 	c.Message = NewMessageClient(c.config)
 	c.Room = NewRoomClient(c.config)
 	c.User = NewUserClient(c.config)
+	c.Verification = NewVerificationClient(c.config)
 	c.View = NewViewClient(c.config)
 }
 
@@ -143,13 +147,14 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		Category: NewCategoryClient(cfg),
-		Message:  NewMessageClient(cfg),
-		Room:     NewRoomClient(cfg),
-		User:     NewUserClient(cfg),
-		View:     NewViewClient(cfg),
+		ctx:          ctx,
+		config:       cfg,
+		Category:     NewCategoryClient(cfg),
+		Message:      NewMessageClient(cfg),
+		Room:         NewRoomClient(cfg),
+		User:         NewUserClient(cfg),
+		Verification: NewVerificationClient(cfg),
+		View:         NewViewClient(cfg),
 	}, nil
 }
 
@@ -167,13 +172,14 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		Category: NewCategoryClient(cfg),
-		Message:  NewMessageClient(cfg),
-		Room:     NewRoomClient(cfg),
-		User:     NewUserClient(cfg),
-		View:     NewViewClient(cfg),
+		ctx:          ctx,
+		config:       cfg,
+		Category:     NewCategoryClient(cfg),
+		Message:      NewMessageClient(cfg),
+		Room:         NewRoomClient(cfg),
+		User:         NewUserClient(cfg),
+		Verification: NewVerificationClient(cfg),
+		View:         NewViewClient(cfg),
 	}, nil
 }
 
@@ -202,21 +208,21 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Category.Use(hooks...)
-	c.Message.Use(hooks...)
-	c.Room.Use(hooks...)
-	c.User.Use(hooks...)
-	c.View.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Category, c.Message, c.Room, c.User, c.Verification, c.View,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Category.Intercept(interceptors...)
-	c.Message.Intercept(interceptors...)
-	c.Room.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
-	c.View.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Category, c.Message, c.Room, c.User, c.Verification, c.View,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -230,6 +236,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Room.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
+	case *VerificationMutation:
+		return c.Verification.mutate(ctx, m)
 	case *ViewMutation:
 		return c.View.mutate(ctx, m)
 	default:
@@ -945,6 +953,139 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 	}
 }
 
+// VerificationClient is a client for the Verification schema.
+type VerificationClient struct {
+	config
+}
+
+// NewVerificationClient returns a client for the Verification from the given config.
+func NewVerificationClient(c config) *VerificationClient {
+	return &VerificationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `verification.Hooks(f(g(h())))`.
+func (c *VerificationClient) Use(hooks ...Hook) {
+	c.hooks.Verification = append(c.hooks.Verification, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `verification.Intercept(f(g(h())))`.
+func (c *VerificationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Verification = append(c.inters.Verification, interceptors...)
+}
+
+// Create returns a builder for creating a Verification entity.
+func (c *VerificationClient) Create() *VerificationCreate {
+	mutation := newVerificationMutation(c.config, OpCreate)
+	return &VerificationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Verification entities.
+func (c *VerificationClient) CreateBulk(builders ...*VerificationCreate) *VerificationCreateBulk {
+	return &VerificationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *VerificationClient) MapCreateBulk(slice any, setFunc func(*VerificationCreate, int)) *VerificationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &VerificationCreateBulk{err: fmt.Errorf("calling to VerificationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*VerificationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &VerificationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Verification.
+func (c *VerificationClient) Update() *VerificationUpdate {
+	mutation := newVerificationMutation(c.config, OpUpdate)
+	return &VerificationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *VerificationClient) UpdateOne(v *Verification) *VerificationUpdateOne {
+	mutation := newVerificationMutation(c.config, OpUpdateOne, withVerification(v))
+	return &VerificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *VerificationClient) UpdateOneID(id int) *VerificationUpdateOne {
+	mutation := newVerificationMutation(c.config, OpUpdateOne, withVerificationID(id))
+	return &VerificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Verification.
+func (c *VerificationClient) Delete() *VerificationDelete {
+	mutation := newVerificationMutation(c.config, OpDelete)
+	return &VerificationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *VerificationClient) DeleteOne(v *Verification) *VerificationDeleteOne {
+	return c.DeleteOneID(v.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *VerificationClient) DeleteOneID(id int) *VerificationDeleteOne {
+	builder := c.Delete().Where(verification.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &VerificationDeleteOne{builder}
+}
+
+// Query returns a query builder for Verification.
+func (c *VerificationClient) Query() *VerificationQuery {
+	return &VerificationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeVerification},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Verification entity by its id.
+func (c *VerificationClient) Get(ctx context.Context, id int) (*Verification, error) {
+	return c.Query().Where(verification.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *VerificationClient) GetX(ctx context.Context, id int) *Verification {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *VerificationClient) Hooks() []Hook {
+	return c.hooks.Verification
+}
+
+// Interceptors returns the client interceptors.
+func (c *VerificationClient) Interceptors() []Interceptor {
+	return c.inters.Verification
+}
+
+func (c *VerificationClient) mutate(ctx context.Context, m *VerificationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&VerificationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&VerificationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&VerificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&VerificationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Verification mutation op: %q", m.Op())
+	}
+}
+
 // ViewClient is a client for the View schema.
 type ViewClient struct {
 	config
@@ -1097,9 +1238,9 @@ func (c *ViewClient) mutate(ctx context.Context, m *ViewMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Category, Message, Room, User, View []ent.Hook
+		Category, Message, Room, User, Verification, View []ent.Hook
 	}
 	inters struct {
-		Category, Message, Room, User, View []ent.Interceptor
+		Category, Message, Room, User, Verification, View []ent.Interceptor
 	}
 )

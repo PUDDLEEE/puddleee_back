@@ -18,5 +18,8 @@ type Room func(*sql.Selector)
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 
+// Verification is the predicate function for verification builders.
+type Verification func(*sql.Selector)
+
 // View is the predicate function for view builders.
 type View func(*sql.Selector)

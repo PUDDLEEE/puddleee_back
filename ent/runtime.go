@@ -10,6 +10,7 @@ import (
 	"github.com/PUDDLEEE/puddleee_back/ent/room"
 	"github.com/PUDDLEEE/puddleee_back/ent/schema"
 	"github.com/PUDDLEEE/puddleee_back/ent/user"
+	"github.com/PUDDLEEE/puddleee_back/ent/verification"
 	"github.com/PUDDLEEE/puddleee_back/ent/view"
 )
 
@@ -105,6 +106,29 @@ func init() {
 	userDescPassword := userFields[3].Descriptor()
 	// user.PasswordValidator is a validator for the "password" field. It is called by the builders before save.
 	user.PasswordValidator = userDescPassword.Validators[0].(func(string) error)
+	verificationMixin := schema.Verification{}.Mixin()
+	verificationMixinFields0 := verificationMixin[0].Fields()
+	_ = verificationMixinFields0
+	verificationFields := schema.Verification{}.Fields()
+	_ = verificationFields
+	// verificationDescCreateTime is the schema descriptor for create_time field.
+	verificationDescCreateTime := verificationMixinFields0[0].Descriptor()
+	// verification.DefaultCreateTime holds the default value on creation for the create_time field.
+	verification.DefaultCreateTime = verificationDescCreateTime.Default.(func() time.Time)
+	// verificationDescUpdateTime is the schema descriptor for update_time field.
+	verificationDescUpdateTime := verificationMixinFields0[1].Descriptor()
+	// verification.DefaultUpdateTime holds the default value on creation for the update_time field.
+	verification.DefaultUpdateTime = verificationDescUpdateTime.Default.(func() time.Time)
+	// verification.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	verification.UpdateDefaultUpdateTime = verificationDescUpdateTime.UpdateDefault.(func() time.Time)
+	// verificationDescCode is the schema descriptor for code field.
+	verificationDescCode := verificationFields[1].Descriptor()
+	// verification.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	verification.CodeValidator = verificationDescCode.Validators[0].(func(string) error)
+	// verificationDescExpiredAt is the schema descriptor for expired_at field.
+	verificationDescExpiredAt := verificationFields[2].Descriptor()
+	// verification.DefaultExpiredAt holds the default value on creation for the expired_at field.
+	verification.DefaultExpiredAt = verificationDescExpiredAt.Default.(time.Time)
 	viewMixin := schema.View{}.Mixin()
 	viewMixinFields0 := viewMixin[0].Fields()
 	_ = viewMixinFields0

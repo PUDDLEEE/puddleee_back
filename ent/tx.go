@@ -20,6 +20,8 @@ type Tx struct {
 	Room *RoomClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// Verification is the client for interacting with the Verification builders.
+	Verification *VerificationClient
 	// View is the client for interacting with the View builders.
 	View *ViewClient
 
@@ -157,6 +159,7 @@ func (tx *Tx) init() {
 	tx.Message = NewMessageClient(tx.config)
 	tx.Room = NewRoomClient(tx.config)
 	tx.User = NewUserClient(tx.config)
+	tx.Verification = NewVerificationClient(tx.config)
 	tx.View = NewViewClient(tx.config)
 }
 

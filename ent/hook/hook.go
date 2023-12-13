@@ -57,6 +57,18 @@ func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
 }
 
+// The VerificationFunc type is an adapter to allow the use of ordinary
+// function as Verification mutator.
+type VerificationFunc func(context.Context, *ent.VerificationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f VerificationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.VerificationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VerificationMutation", m)
+}
+
 // The ViewFunc type is an adapter to allow the use of ordinary
 // function as View mutator.
 type ViewFunc func(context.Context, *ent.ViewMutation) (ent.Value, error)
