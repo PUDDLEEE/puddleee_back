@@ -37,12 +37,10 @@ func (a *AuthService) Signin(dto authdto.SigninDTO) (*authdto.SigninOutputDTO, e
 	}
 
 	accessToken, err := a.jwtService.CreateAccessToken(claims)
-
 	if err != nil {
 		return nil, err
 	}
 	refreshToken, err := a.jwtService.CreateRefreshToken(claims)
-
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +65,6 @@ func (a *AuthService) CreateEmailVerification(email string) (*ent.Verification, 
 		UUID: newUUID,
 		Code: newCode,
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +81,6 @@ func (a *AuthService) SendEmailVerification(email string, verification *ent.Veri
 
 func (a *AuthService) VerifyEmailVerification(uuidStr string, code string) error {
 	verification, err := a.authRepo.FindOneByUUID(a.ctx, a.client, uuidStr)
-
 	if err != nil {
 		return err
 	}

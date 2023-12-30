@@ -24,7 +24,6 @@ func TestAuthService_CreateEmailVerification(t *testing.T) {
 		{
 			name: "CreateEmailVerification/create_verification_failed",
 			before: func(t *testing.T, repo *mocks.IAuthRepository, client *ent.Client, ctx context.Context, uuid uuid.UUID, code string) {
-
 				repo.On("GenerateUUIDFromString", "").Return(uuid).Once()
 				repo.On("GenerateCode", 6).Return(code).Once()
 				repo.On("Create", ctx, client, authdto.CreateVerificationDTO{
@@ -40,7 +39,6 @@ func TestAuthService_CreateEmailVerification(t *testing.T) {
 		{
 			name: "CreateEmailVerification/create_verification_success",
 			before: func(t *testing.T, repo *mocks.IAuthRepository, client *ent.Client, ctx context.Context, uuid uuid.UUID, code string) {
-
 				repo.On("GenerateUUIDFromString", "").Return(uuid).Once()
 				repo.On("GenerateCode", 6).Return(code).Once()
 				repo.On("Create", ctx, client, authdto.CreateVerificationDTO{
